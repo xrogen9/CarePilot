@@ -17,9 +17,11 @@ function DoctorDashboard() {
         setSelected((current) => {
           if (!current) return null;
 
-          return response.data.find(
-            (assessment) => assessment._id === current._id
-          ) || current;
+          return (
+            response.data.find(
+              (assessment) => assessment._id === current._id
+            ) || current
+          );
         });
       } catch (error) {
         console.log(error);
@@ -94,10 +96,18 @@ function DoctorDashboard() {
                     <h3>{assessment.patient.name}</h3>
                     <p>{assessment.patient.email}</p>
 
-                    <span className="status-badge">
-                      {assessment.summary
-                        ? "AI Summary Ready"
-                        : "AI Summary Processing..."}
+                    <span
+                      className={`status-badge ${
+                        assessment.urgency || "normal"
+                      }`}
+                    >
+                      {assessment.urgency === "urgent"
+                        ? "🔴 Urgent Attention"
+                        : assessment.urgency === "review"
+                        ? "🟡 Needs Review"
+                        : assessment.summary
+                        ? "🟢 No Urgent Indicators"
+                        : "⏳ AI Processing..."}
                     </span>
                   </div>
                 </div>
@@ -151,7 +161,35 @@ function DoctorDashboard() {
                 ))}
               </div>
 
-              {selected.summary ? (
+              {selected.urgency &&
+                selected.urgency !== "normal" && (
+                  <div
+                    className={`urgency-alert ${selected.urgency}`}
+                  >
+                    <div className="urgency-alert-title">
+                      {selected.urgency === "urgent"
+                        ? "🔴 Urgent Attention"
+                        : "🟡 Clinical Review Recommended"}
+                    </div>
+
+                    <p>{selected.flagReason}</p>
+
+                    {selected.redFlags?.length > 0 && (
+                      <div className="red-flags">
+                        <strong>Reported warning signs:</strong>
+
+                        <ul>
+                          {selected.redFlags.map((flag, index) => (
+                            <li key={index}>{flag}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              {selected.summary &&
+              typeof selected.summary === "object" ? (
                 <div className="ai-summary">
                   <div className="ai-summary-header">
                     <div className="ai-icon">AI</div>
@@ -159,33 +197,101 @@ function DoctorDashboard() {
                     <div>
                       <h3>AI Intake Summary</h3>
                       <span>
-                        Based only on reported patient information
+                        Structured from reported patient information
                       </span>
                     </div>
                   </div>
 
-                  <p>{selected.summary}</p>
+                  <div className="summary-grid">
+                    <div className="summary-item summary-wide">
+                      <span className="summary-label">
+                        CHIEF COMPLAINT
+                      </span>
 
-                  <small>
-                    AI-generated intake summary — not a diagnosis.
-                  </small>
+                      <strong>
+                        {selected.summary.chiefComplaint ||
+                          "Not reported"}
+                      </strong>
+                    </div>
+
+                    <div className="summary-item">
+                      <span className="summary-label">
+                        DURATION
+                      </span>
+
+                      <strong>
+                        {selected.summary.duration ||
+                          "Not reported"}
+                      </strong>
+                    </div>
+
+                    <div className="summary-item">
+                      <span className="summary-label">
+                        SEVERITY
+                      </span>
+
+                      <strong>
+                        {selected.summary.severity ||
+                          "Not reported"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {selected.summary.symptoms?.length > 0 && (
+                    <div className="summary-symptoms">
+                      <span className="summary-label">
+                        REPORTED SYMPTOMS
+                      </span>
+
+                      <div className="symptom-tags">
+                        {selected.summary.symptoms.map(
+                          (symptom, index) => (
+                            <span
+                              className="symptom-tag"
+                              key={index}
+                            >
+                              {symptom}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {selected.summary.otherInformation && (
+                    <div className="summary-other">
+                      <span className="summary-label">
+                        OTHER RELEVANT INFORMATION
+                      </span>
+
+                      <p>
+                        {selected.summary.otherInformation}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="summary-footer">
+                    <span>AI-assisted intake summary</span>
+                    <small>Not a diagnosis</small>
+                  </div>
                 </div>
               ) : (
-                <div className="ai-summary">
+                <div className="ai-summary processing-summary">
                   <div className="ai-summary-header">
                     <div className="ai-icon">AI</div>
 
                     <div>
                       <h3>AI Summary Processing</h3>
                       <span>
-                        The summary is being prepared automatically.
+                        Preparing a structured clinical summary
                       </span>
                     </div>
                   </div>
 
                   <p>
-                    Please wait a few moments. The AI summary will appear
-                    automatically.
+                    The AI summary is being prepared. It will
+                    appear automatically when processing is
+                    complete.
                   </p>
                 </div>
               )}

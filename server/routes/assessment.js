@@ -16,35 +16,81 @@ const generateAISummary = async (assessmentId, answers) => {
       .join("\n");
 
     const prompt = `
-You are a medical intake summarization assistant.
+    You are a medical intake summarization assistant.
 
-Your task is ONLY to summarize information explicitly provided by the patient.
+    Analyze ONLY information explicitly reported by the patient.
 
-Do NOT:
-- diagnose the patient
-- recommend medication
-- invent symptoms
-- infer medical conditions
-- make claims that are not supported by the answers
+    Create a concise, structured intake summary for a doctor who needs to understand the patient's situation quickly.
 
-Create a concise summary for a doctor.
+    Do NOT:
+    - diagnose the patient
+    - recommend medication or treatment
+    - invent symptoms
+    - infer medical conditions
+    - add information that was not explicitly reported
 
-Include:
-1. Chief Complaint
-2. Duration
-3. Severity
-4. Relevant Reported Symptoms
-5. Other Relevant Information explicitly provided
+    Extract the following:
 
-Use plain text only.
-Do not use Markdown.
-Do not use asterisks.
-Keep the summary concise and easy to scan.
+    1. chiefComplaint
+      - The main problem or reason for consultation.
 
-Patient intake answers:
+    2. duration
+      - How long the patient has reported having the problem.
 
-${answersText}
-`;
+    3. severity
+      - The reported severity, intensity, or relevant severity description.
+      - If no severity information was provided, use "Not reported".
+
+    4. symptoms
+      - A list of relevant symptoms explicitly reported by the patient.
+      - Do not include the chief complaint again unless it is also clearly a separate symptom.
+      - Use short, clear phrases.
+
+    5. otherInformation
+      - Any other useful information explicitly provided that does not fit the above categories.
+      - If there is none, use an empty string.
+
+    Keep everything concise and easy for a doctor to scan.
+
+    Return ONLY valid JSON in exactly this structure:
+
+    {
+      "summary": {
+        "chiefComplaint": "",
+        "duration": "",
+        "severity": "",
+        "symptoms": [],
+        "otherInformation": ""
+      },
+      "urgency": "normal",
+      "flagReason": "",
+      "redFlags": []
+    }
+
+    Urgency must be exactly one of:
+
+    "normal"
+    - No obvious urgent warning signs are explicitly reported.
+
+    "review"
+    - Something concerning, unusual, or unclear is explicitly reported and should receive additional clinical review.
+
+    "urgent"
+    - Explicitly reported symptoms/signs could indicate a potentially serious situation requiring prompt medical evaluation.
+
+    If urgency is "normal":
+    - flagReason must be ""
+    - redFlags must be []
+
+    If urgency is "review" or "urgent":
+    - redFlags must contain ONLY concerning symptoms explicitly reported by the patient.
+    - flagReason must briefly explain why those reported symptoms deserve attention.
+    - Do not diagnose the patient.
+
+    Patient intake answers:
+
+    ${answersText}
+    `;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash-lite",
@@ -53,11 +99,17 @@ ${answersText}
         thinkingConfig: {
           thinkingLevel: "minimal",
         },
+        responseMimeType: "application/json",
       },
     });
 
+    const result = JSON.parse(response.text);
+
     await Assessment.findByIdAndUpdate(assessmentId, {
-      summary: response.text,
+      summary: result.summary,
+      urgency: result.urgency,
+      flagReason: result.flagReason,
+      redFlags: result.redFlags
     });
 
     console.log("AI summary generated:", assessmentId);

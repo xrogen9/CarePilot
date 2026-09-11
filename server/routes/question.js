@@ -32,7 +32,7 @@ Rules:
 - Generate 3 to 5 short multiple-choice options whenever possible.
 - Options should be mutually understandable and relevant to the question.
 - Do not make options overly specific or medically complicated.
-- The patient must always have an "Other" option available.
+- Do not include an "Other" option in the generated choices. The application will provide an "Other" option separately.
 - Stop when enough useful information has been collected.
 
 Previous patient answers:
