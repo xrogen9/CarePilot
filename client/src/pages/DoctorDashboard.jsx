@@ -5,35 +5,87 @@ import "./DoctorDashboard.css";
 function DoctorDashboard() {
   const [assessments, setAssessments] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [codeMessage, setCodeMessage] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    const fetchAssessments = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await API.get("/assessment/doctor");
-        setAssessments(response.data);
+        const assessmentResponse = await API.get(
+          "/assessment/doctor"
+        );
+
+        setAssessments(assessmentResponse.data);
 
         setSelected((current) => {
           if (!current) return null;
 
           return (
-            response.data.find(
+            assessmentResponse.data.find(
               (assessment) => assessment._id === current._id
             ) || current
           );
         });
+
+        const userResponse = await API.get("/auth/me");
+
+        const updatedUser = {
+          ...user,
+          doctorCode: userResponse.data.doctorCode,
+          doctorCodeExpiresAt:
+            userResponse.data.doctorCodeExpiresAt
+        };
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(updatedUser)
+        );
       } catch (error) {
         console.log(error);
       }
     };
 
-    fetchAssessments();
+    fetchDashboardData();
 
-    const interval = setInterval(fetchAssessments, 5000);
+    const interval = setInterval(
+      fetchDashboardData,
+      5000
+    );
 
     return () => clearInterval(interval);
   }, []);
+
+  const regenerateCode = async () => {
+    try {
+      setCodeMessage("");
+
+      const response = await API.post(
+        "/auth/regenerate-doctor-code"
+      );
+
+      const updatedUser = {
+        ...user,
+        doctorCode: response.data.doctorCode,
+        doctorCodeExpiresAt:
+          response.data.doctorCodeExpiresAt
+      };
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(updatedUser)
+      );
+
+      setCodeMessage("New code generated.");
+
+      window.location.reload();
+    } catch (error) {
+      setCodeMessage(
+        error.response?.data?.message ||
+          "Could not generate a new code."
+      );
+    }
+  };
 
   return (
     <div className="doctor-page">
@@ -68,12 +120,58 @@ function DoctorDashboard() {
         <div className="dashboard-title">
           <div>
             <h2>Patients Waiting</h2>
-            <p>Review patient assessments before consultation.</p>
+            <p>
+              Review patient assessments before consultation.
+            </p>
           </div>
 
           <div className="patient-count">
             {assessments.length}{" "}
-            {assessments.length === 1 ? "Patient" : "Patients"}
+            {assessments.length === 1
+              ? "Patient"
+              : "Patients"}
+          </div>
+        </div>
+
+        <div className="doctor-code-card">
+          <div>
+            <span className="doctor-code-label">
+              YOUR CAREPILOT CODE
+            </span>
+
+            <strong>
+              {user?.doctorCode || "No code available"}
+            </strong>
+
+            <p>
+              Share this code with your patient so their
+              assessments are sent directly to you.
+            </p>
+          </div>
+
+          <div className="doctor-code-expiry">
+            <span>Expires</span>
+
+            <strong>
+              {user?.doctorCodeExpiresAt
+                ? new Date(
+                    user.doctorCodeExpiresAt
+                  ).toLocaleString()
+                : "—"}
+            </strong>
+
+            <button
+              className="regenerate-code-btn"
+              onClick={regenerateCode}
+            >
+              Generate New Code
+            </button>
+
+            {codeMessage && (
+              <small className="code-message">
+                {codeMessage}
+              </small>
+            )}
           </div>
         </div>
 
@@ -81,20 +179,35 @@ function DoctorDashboard() {
           <div className="empty-state">
             <div className="empty-icon">✓</div>
             <h3>No patients waiting</h3>
-            <p>New patient assessments will appear here.</p>
+            <p>
+              New patient assessments will appear here.
+            </p>
           </div>
         ) : (
           <div className="patient-list">
             {assessments.map((assessment) => (
-              <div className="patient-card" key={assessment._id}>
+              <div
+                className="patient-card"
+                key={assessment._id}
+              >
                 <div className="patient-info">
                   <div className="patient-avatar">
-                    {assessment.patient.name.charAt(0).toUpperCase()}
+                    {assessment.patient.name
+                      .charAt(0)
+                      .toUpperCase()}
                   </div>
 
                   <div>
                     <h3>{assessment.patient.name}</h3>
                     <p>{assessment.patient.email}</p>
+
+                    <p className="assessment-date">
+                      {assessment.createdAt
+                        ? new Date(
+                            assessment.createdAt
+                          ).toLocaleString()
+                        : "Date unavailable"}
+                    </p>
 
                     <span
                       className={`status-badge ${
@@ -115,7 +228,9 @@ function DoctorDashboard() {
                 <div className="patient-actions">
                   <button
                     className="secondary-btn"
-                    onClick={() => setSelected(assessment)}
+                    onClick={() =>
+                      setSelected(assessment)
+                    }
                   >
                     View Details
                   </button>
@@ -154,7 +269,10 @@ function DoctorDashboard() {
 
               <div className="answers-list">
                 {selected.answers.map((answer, index) => (
-                  <div className="answer-item" key={index}>
+                  <div
+                    className="answer-item"
+                    key={index}
+                  >
                     <span>{answer.question}</span>
                     <strong>{answer.answer}</strong>
                   </div>
@@ -176,12 +294,18 @@ function DoctorDashboard() {
 
                     {selected.redFlags?.length > 0 && (
                       <div className="red-flags">
-                        <strong>Reported warning signs:</strong>
+                        <strong>
+                          Reported warning signs:
+                        </strong>
 
                         <ul>
-                          {selected.redFlags.map((flag, index) => (
-                            <li key={index}>{flag}</li>
-                          ))}
+                          {selected.redFlags.map(
+                            (flag, index) => (
+                              <li key={index}>
+                                {flag}
+                              </li>
+                            )
+                          )}
                         </ul>
                       </div>
                     )}
@@ -197,7 +321,8 @@ function DoctorDashboard() {
                     <div>
                       <h3>AI Intake Summary</h3>
                       <span>
-                        Structured from reported patient information
+                        Structured from reported patient
+                        information
                       </span>
                     </div>
                   </div>
@@ -271,7 +396,10 @@ function DoctorDashboard() {
                   )}
 
                   <div className="summary-footer">
-                    <span>AI-assisted intake summary</span>
+                    <span>
+                      AI-assisted intake summary
+                    </span>
+
                     <small>Not a diagnosis</small>
                   </div>
                 </div>
@@ -283,15 +411,16 @@ function DoctorDashboard() {
                     <div>
                       <h3>AI Summary Processing</h3>
                       <span>
-                        Preparing a structured clinical summary
+                        Preparing a structured clinical
+                        summary
                       </span>
                     </div>
                   </div>
 
                   <p>
-                    The AI summary is being prepared. It will
-                    appear automatically when processing is
-                    complete.
+                    The AI summary is being prepared. It
+                    will appear automatically when
+                    processing is complete.
                   </p>
                 </div>
               )}

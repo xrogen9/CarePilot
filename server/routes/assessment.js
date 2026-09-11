@@ -120,10 +120,19 @@ const generateAISummary = async (assessmentId, answers) => {
 
 router.post("/", auth, async (req, res) => {
   try {
-    const { patient, answers } = req.body;
+    const { answers } = req.body;
+
+    const patient = await require("../models/User").findById(req.user.id);
+
+    if (!patient.connectedDoctor) {
+      return res.status(400).json({
+        message: "Please connect to a doctor before submitting an assessment"
+      });
+    }
 
     const assessment = await Assessment.create({
-      patient,
+      patient: req.user.id,
+      doctor: patient.connectedDoctor,
       answers,
       status: "waiting",
     });
@@ -156,6 +165,7 @@ router.get("/doctor", auth, (req, res, next) => {
 }, async (req, res) => {
   try {
     const assessments = await Assessment.find({
+      doctor: req.user.id,
       status: "waiting",
     })
       .populate("patient", "name email")
@@ -167,6 +177,30 @@ router.get("/doctor", auth, (req, res, next) => {
 
     res.status(500).json({
       message: "Server error",
+    });
+  }
+});
+
+router.get("/history", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "patient") {
+      return res.status(403).json({
+        message: "Patient access required"
+      });
+    }
+
+    const assessments = await Assessment.find({
+      patient: req.user.id
+    })
+      .populate("doctor", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(assessments);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server error"
     });
   }
 });

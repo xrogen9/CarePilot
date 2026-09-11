@@ -557,3 +557,98 @@ button {
     flex-direction: column;
   }
 }
+.doctor-code-card {
+  margin-bottom: 28px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #eef8fb, #f8fcfd);
+  border: 1px solid #cfe5ec;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.doctor-code-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #6b7f89;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.doctor-code-card > div:first-child > strong {
+  display: block;
+  color: #176b87;
+  font-size: 25px;
+  letter-spacing: 0.08em;
+}
+
+.doctor-code-card p {
+  margin: 7px 0 0;
+  color: #607680;
+  font-size: 13px;
+}
+
+.doctor-code-expiry {
+  min-width: 180px;
+  padding: 12px 15px;
+  background: #ffffff;
+  border: 1px solid #dbe7ec;
+  border-radius: 11px;
+}
+
+.doctor-code-expiry span {
+  display: block;
+  color: #7b8d95;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.doctor-code-expiry strong {
+  color: #344952;
+  font-size: 13px;
+}
+
+@media (max-width: 650px) {
+  .doctor-code-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .doctor-code-expiry {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+.assessment-date {
+  margin: 4px 0 0;
+  color: #82939a;
+  font-size: 12px;
+}
+.regenerate-code-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 1px solid #cfe1e7;
+  border-radius: 8px;
+  background: #f7fafb;
+  color: #176b87;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.regenerate-code-btn:hover {
+  background: #eef7fa;
+  border-color: #b8d5df;
+}
+
+.code-message {
+  display: block;
+  margin-top: 7px;
+  color: #176b87;
+  font-size: 10px;
+}
