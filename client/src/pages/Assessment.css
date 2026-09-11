@@ -1,0 +1,261 @@
+.assessment-page {
+  min-height: 100vh;
+  background: #f5f8fb;
+  color: #17212b;
+}
+
+.assessment-header {
+  height: 76px;
+  background: white;
+  border-bottom: 1px solid #e2e8ed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 50px;
+}
+
+.assessment-header h1 {
+  margin: 0;
+  color: #176b87;
+  font-size: 25px;
+}
+
+.assessment-header p {
+  margin: 3px 0 0;
+  color: #71808d;
+  font-size: 13px;
+}
+
+.secure-label {
+  color: #5f7180;
+  font-size: 13px;
+}
+
+.secure-label span {
+  color: #2b9b61;
+  font-size: 10px;
+  margin-right: 5px;
+}
+
+.assessment-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 55px 25px;
+}
+
+.assessment-intro {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.assessment-intro h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.assessment-intro p {
+  max-width: 570px;
+  margin: 10px auto 0;
+  color: #71808d;
+  line-height: 1.6;
+}
+
+.progress-section {
+  margin-bottom: 22px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #71808d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.progress-bar {
+  height: 7px;
+  background: #e3ebef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #176b87;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.question-card {
+  background: white;
+  border: 1px solid #e0e7ed;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 15px rgba(20, 40, 60, 0.05);
+}
+
+.question-number {
+  color: #176b87;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.question-card h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.question-help {
+  color: #71808d;
+  font-size: 14px;
+  margin: 9px 0 25px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.option-button {
+  width: 100%;
+  padding: 16px 18px;
+  background: white;
+  border: 1px solid #d6e0e6;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #17212b;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.option-button:hover {
+  border-color: #176b87;
+  background: #f2f8fa;
+  transform: translateY(-1px);
+}
+
+.option-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.option-arrow {
+  color: #176b87;
+  font-size: 18px;
+}
+
+.assessment-note {
+  text-align: center;
+  margin-top: 20px;
+  color: #84929d;
+  font-size: 12px;
+}
+
+.submitting-message {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: white;
+  border: 1px solid #dce7ec;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.submitting-message strong {
+  font-size: 13px;
+}
+
+.submitting-message p {
+  margin: 3px 0 0;
+  color: #71808d;
+  font-size: 12px;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #dce8ed;
+  border-top-color: #176b87;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 650px) {
+  .assessment-header {
+    padding: 0 20px;
+  }
+
+  .secure-label {
+    display: none;
+  }
+
+  .assessment-container {
+    padding: 35px 15px;
+  }
+
+  .question-card {
+    padding: 24px 20px;
+  }
+
+  .assessment-intro h2 {
+    font-size: 24px;
+  }
+}
+.answer-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px;
+  margin: 20px 0;
+  border: 1px solid #d5dfe5;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.answer-input:focus {
+  border-color: #176b87;
+  box-shadow: 0 0 0 3px rgba(23, 107, 135, 0.08);
+}
+
+.answer-input:disabled {
+  background: #f5f8fb;
+}
+.other-answer {
+  margin-top: 16px;
+}
+
+.answer-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px;
+  border: 1px solid #d5dfe5;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.answer-input:focus {
+  border-color: #176b87;
+  box-shadow: 0 0 0 3px rgba(23, 107, 135, 0.08);
+}

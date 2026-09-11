@@ -1,0 +1,234 @@
+.patient-page {
+  min-height: 100vh;
+  background: #f5f8fb;
+  color: #17212b;
+}
+
+.patient-header {
+  height: 76px;
+  background: white;
+  border-bottom: 1px solid #e2e8ed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 50px;
+}
+
+.patient-header h1 {
+  margin: 0;
+  color: #176b87;
+  font-size: 25px;
+}
+
+.patient-header p {
+  margin: 3px 0 0;
+  color: #71808d;
+  font-size: 13px;
+}
+
+.patient-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.patient-profile strong,
+.patient-profile span {
+  display: block;
+}
+
+.patient-profile span {
+  margin-top: 2px;
+  color: #7c8994;
+  font-size: 12px;
+}
+
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e4f3f7;
+  color: #176b87;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.patient-content {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 50px 30px;
+}
+
+.welcome-section {
+  margin-bottom: 30px;
+}
+
+.welcome-label,
+.card-label {
+  color: #176b87;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.welcome-section h2 {
+  margin: 5px 0 7px;
+  font-size: 30px;
+}
+
+.welcome-section > p:last-child {
+  margin: 0;
+  color: #71808d;
+}
+
+.assessment-card {
+  background: white;
+  border: 1px solid #dce7ec;
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  gap: 24px;
+  box-shadow: 0 4px 15px rgba(20, 40, 60, 0.05);
+}
+
+.assessment-icon {
+  width: 55px;
+  height: 55px;
+  min-width: 55px;
+  border-radius: 12px;
+  background: #e6f3f6;
+  color: #176b87;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 300;
+}
+
+.assessment-info h2 {
+  margin: 5px 0 8px;
+  font-size: 23px;
+}
+
+.assessment-info p {
+  max-width: 700px;
+  color: #71808d;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.assessment-button {
+  border: none;
+  background: #176b87;
+  color: white;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.assessment-button:hover {
+  background: #12576e;
+}
+
+.assessment-button span {
+  margin-left: 10px;
+  font-size: 17px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 18px;
+}
+
+.info-card {
+  background: white;
+  border: 1px solid #e1e8ee;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  gap: 15px;
+}
+
+.info-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 9px;
+  background: #f0f6f8;
+  color: #176b87;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.info-card h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+
+.info-card p {
+  margin: 0;
+  color: #788692;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dashboard-note {
+  margin-top: 18px;
+  padding: 16px 18px;
+  background: #eef7f9;
+  border: 1px solid #d4e9ee;
+  border-radius: 10px;
+  color: #61727d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dashboard-note strong {
+  color: #176b87;
+}
+
+@media (max-width: 650px) {
+  .patient-header {
+    padding: 0 20px;
+  }
+
+  .patient-content {
+    padding: 35px 15px;
+  }
+
+  .patient-profile > div:last-child {
+    display: none;
+  }
+
+  .assessment-card {
+    padding: 24px;
+    flex-direction: column;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.logout-btn {
+  margin-left: 20px;
+  padding: 9px 16px;
+  border: 1px solid #d5dfe5;
+  border-radius: 8px;
+  background: white;
+  color: #555;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #f5f8fb;
+}
