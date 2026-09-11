@@ -11,7 +11,10 @@ app.use(express.json());
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
-    app.listen(5000, () => console.log("Server running on port 5000"));
+
+    if (require.main === module) {
+      app.listen(5000, () => console.log("Server running on port 5000"));
+    }
   })
   .catch(err => console.log("MongoDB error:", err));
 
@@ -30,3 +33,5 @@ app.use("/api/ai", aiRoutes);
 
 const questionRoutes = require("./routes/question");
 app.use("/api/question", questionRoutes);
+
+module.exports = app;
