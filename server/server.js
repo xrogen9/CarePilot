@@ -37,4 +37,7 @@ app.use("/api/ai", aiRoutes);
 const questionRoutes = require("./routes/question");
 app.use("/api/question", questionRoutes);
 
+const documentRoutes = require("./routes/document");
+app.use("/api/document", documentRoutes);
+
 module.exports = app;

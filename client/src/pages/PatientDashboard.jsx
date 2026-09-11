@@ -1,18 +1,99 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "./PatientDashboard.css";
+
+function CustomDropdown({
+  value,
+  options,
+  onChange,
+  placeholder
+}) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const selectedOption = options.find(
+    (option) => option.value === value
+  );
+
+  return (
+    <div
+      className={`custom-dropdown ${open ? "open" : ""}`}
+      ref={dropdownRef}
+    >
+      <button
+        type="button"
+        className="custom-dropdown-button"
+        onClick={() => setOpen(!open)}
+      >
+        <span>
+          {selectedOption?.label || placeholder}
+        </span>
+
+        <span className="custom-dropdown-arrow">
+          ˅
+        </span>
+      </button>
+
+      {open && (
+        <div className="custom-dropdown-menu">
+          {options.map((option) => (
+            <button
+              type="button"
+              key={option.value}
+              className={`custom-dropdown-option ${
+                option.value === value ? "selected" : ""
+              }`}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function PatientDashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [history, setHistory] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [doctorCode, setDoctorCode] = useState("");
   const [doctor, setDoctor] = useState(null);
   const [connectMessage, setConnectMessage] = useState("");
   const [selectedHistory, setSelectedHistory] = useState(null);
   const [changingDoctor, setChangingDoctor] = useState(false);
+
+  const [documentType, setDocumentType] = useState("prescription");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const [assessments, setAssessments] = useState([]);
+  const [selectedAssessment, setSelectedAssessment] = useState("");
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -43,6 +124,29 @@ function PatientDashboard() {
     fetchDoctor();
   }, []);
 
+  useEffect(() => {
+    fetchDocuments();
+    fetchAssessments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await API.get("/document/patient");
+      setDocuments(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchAssessments = async () => {
+    try {
+      const response = await API.get("/assessment/history");
+      setAssessments(response.data);
+    } catch (error) {
+      console.log("Assessment fetch error:", error);
+    }
+  };
+
   const connectDoctor = async () => {
     try {
       setConnectMessage("");
@@ -55,17 +159,106 @@ function PatientDashboard() {
       setDoctorCode("");
       setChangingDoctor(false);
 
-      setConnectMessage("Successfully connected to your doctor.");
+      setConnectMessage(
+        "Successfully connected to your doctor."
+      );
 
       setTimeout(() => {
         setConnectMessage("");
       }, 2500);
     } catch (error) {
       setConnectMessage(
-        error.response?.data?.message || "Could not connect to doctor."
+        error.response?.data?.message ||
+          "Could not connect to doctor."
       );
     }
   };
+
+  const uploadDocument = async () => {
+    if (!selectedFile) {
+      setUploadMessage("Please select a document first.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadMessage("");
+
+      const formData = new FormData();
+
+      formData.append("document", selectedFile);
+      formData.append("type", documentType);
+
+      if (selectedAssessment) {
+        formData.append("assessment", selectedAssessment);
+      }
+
+      const response = await API.post(
+        "/document/upload",
+        formData
+      );
+
+      setUploadMessage(response.data.message);
+
+      setSelectedFile(null);
+      setSelectedAssessment("");
+
+      const fileInput =
+        document.getElementById("document-file");
+
+      if (fileInput) {
+        fileInput.value = "";
+      }
+
+      fetchDocuments();
+    } catch (error) {
+      setUploadMessage(
+        error.response?.data?.message ||
+          "Could not upload document."
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const viewDocument = async (document) => {
+    try {
+      const response = await API.get(
+        `/document/${document._id}/view`,
+        {
+          responseType: "blob"
+        }
+      );
+
+      const fileBlob = new Blob(
+        [response.data],
+        { type: document.mimeType }
+      );
+
+      const fileUrl =
+        URL.createObjectURL(fileBlob);
+
+      window.open(fileUrl, "_blank");
+
+      setTimeout(() => {
+        URL.revokeObjectURL(fileUrl);
+      }, 60000);
+    } catch (error) {
+      console.log(error);
+
+      alert(
+        error.response?.data?.message ||
+          "Could not open document."
+      );
+    }
+  };
+
+  const selectedHistoryDocuments = selectedHistory
+    ? documents.filter(
+        (document) =>
+          document.assessment?._id === selectedHistory._id
+      )
+    : [];
 
   return (
     <div className="patient-page">
@@ -101,15 +294,19 @@ function PatientDashboard() {
       <main className="patient-content">
         <section className="doctor-connect-card">
           <div>
-            <span className="card-label">YOUR DOCTOR</span>
+            <span className="card-label">
+              YOUR DOCTOR
+            </span>
 
             {doctor && !changingDoctor ? (
               <>
-                <h2>Connected to Dr. {doctor.name}</h2>
+                <h2>
+                  Connected to Dr. {doctor.name}
+                </h2>
 
                 <p>
-                  Your future health assessments will be sent directly to this
-                  doctor.
+                  Your future health assessments will be
+                  sent directly to this doctor.
                 </p>
 
                 <button
@@ -131,7 +328,8 @@ function PatientDashboard() {
                 </h2>
 
                 <p>
-                  Enter the CarePilot code provided by your doctor.
+                  Enter the CarePilot code provided by
+                  your doctor.
                 </p>
 
                 <div className="doctor-code-input">
@@ -139,7 +337,9 @@ function PatientDashboard() {
                     type="text"
                     placeholder="Enter doctor code"
                     value={doctorCode}
-                    onChange={(e) => setDoctorCode(e.target.value)}
+                    onChange={(e) =>
+                      setDoctorCode(e.target.value)
+                    }
                   />
 
                   <button onClick={connectDoctor}>
@@ -163,29 +363,44 @@ function PatientDashboard() {
             )}
 
             {connectMessage && (
-              <p className="connect-message">{connectMessage}</p>
+              <p className="connect-message">
+                {connectMessage}
+              </p>
             )}
           </div>
         </section>
 
         <section className="welcome-section">
-          <p className="welcome-label">WELCOME BACK</p>
-          <h2>Hello, {user?.name} 👋</h2>
+          <p className="welcome-label">
+            WELCOME BACK
+          </p>
+
+          <h2>
+            Hello, {user?.name} 👋
+          </h2>
+
           <p>
-            Manage your health information and prepare for your next
-            consultation.
+            Manage your health information and prepare
+            for your next consultation.
           </p>
         </section>
 
         <section className="assessment-card">
-          <div className="assessment-icon">+</div>
+          <div className="assessment-icon">
+            +
+          </div>
 
           <div className="assessment-info">
-            <span className="card-label">PRE-CONSULTATION</span>
+            <span className="card-label">
+              PRE-CONSULTATION
+            </span>
+
             <h2>Health Assessment</h2>
+
             <p>
-              Answer a few simple questions about your symptoms. Your
-              responses will help your doctor prepare before your consultation.
+              Answer a few simple questions about your
+              symptoms. Your responses will help your
+              doctor prepare before your consultation.
             </p>
 
             <button
@@ -200,49 +415,228 @@ function PatientDashboard() {
 
         <section className="dashboard-grid">
           <div className="info-card">
-            <div className="info-icon">✓</div>
+            <div className="info-icon">
+              ✓
+            </div>
 
             <div>
               <h3>Doctor Preparation</h3>
+
               <p>
-                Your assessment is summarized for your doctor before your
-                consultation.
+                Your assessment is summarized for your
+                doctor before your consultation.
               </p>
             </div>
           </div>
 
           <div className="info-card">
-            <div className="info-icon">🔒</div>
+            <div className="info-icon">
+              🔒
+            </div>
 
             <div>
               <h3>Private & Secure</h3>
+
               <p>
-                Your health information is securely handled and shared only
-                for your care.
+                Your health information is securely
+                handled and shared only for your care.
               </p>
             </div>
+          </div>
+        </section>
+
+        <section className="documents-card">
+          <div className="documents-header">
+            <div>
+              <span className="card-label">
+                MEDICAL DOCUMENTS
+              </span>
+
+              <h2>Your Medical Records</h2>
+
+              <p>
+                Upload prescriptions and medical reports
+                for future reference.
+              </p>
+            </div>
+          </div>
+
+          <div className="document-upload">
+            <CustomDropdown
+              value={selectedAssessment}
+              onChange={setSelectedAssessment}
+              placeholder="General Medical Record"
+              options={[
+                {
+                  value: "",
+                  label: "General Medical Record"
+                },
+                ...assessments.map((assessment) => ({
+                  value: assessment._id,
+                  label: `${
+                    assessment.summary?.chiefComplaint ||
+                    "Medical Assessment"
+                  } - ${new Date(
+                    assessment.createdAt
+                  ).toLocaleDateString()}`
+                }))
+              ]}
+            />
+
+            <CustomDropdown
+              value={documentType}
+              onChange={setDocumentType}
+              options={[
+                {
+                  value: "prescription",
+                  label: "Prescription"
+                },
+                {
+                  value: "test-report",
+                  label: "Test Report"
+                },
+                {
+                  value: "other",
+                  label: "Other"
+                }
+              ]}
+            />
+
+            <input
+              id="document-file"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,.pdf"
+              onChange={(e) =>
+                setSelectedFile(e.target.files[0])
+              }
+            />
+
+            <button
+              onClick={uploadDocument}
+              disabled={uploading}
+            >
+              {uploading
+                ? "Uploading..."
+                : "Upload Document"}
+            </button>
+          </div>
+
+          {uploadMessage && (
+            <p className="upload-message">
+              {uploadMessage}
+            </p>
+          )}
+
+          <div className="document-list">
+            {documents.length === 0 ? (
+              <p className="no-documents">
+                No medical documents uploaded yet.
+              </p>
+            ) : (
+              documents.map((document) => (
+                <div
+                  className="document-item"
+                  key={document._id}
+                >
+                  <div className="document-icon">
+                    {document.type === "prescription"
+                      ? "💊"
+                      : document.type === "test-report"
+                      ? "🧪"
+                      : "📄"}
+                  </div>
+
+                  <div className="document-info">
+                    <strong>
+                      {document.fileName}
+                    </strong>
+
+                    <span>
+                      {document.type === "prescription"
+                        ? "Prescription"
+                        : document.type === "test-report"
+                        ? "Test Report"
+                        : "Other Document"}
+                    </span>
+
+                    <small>
+                      {new Date(
+                        document.createdAt
+                      ).toLocaleString()}
+                    </small>
+
+                    {document.assessment && (
+                      <small>
+                        Related to:{" "}
+                        {document.assessment.summary
+                          ?.chiefComplaint ||
+                          "Medical Assessment"}
+                      </small>
+                    )}
+                  </div>
+
+                  <button
+                    className="view-document-btn"
+                    onClick={() =>
+                      viewDocument(document)
+                    }
+                  >
+                    View
+                  </button>
+
+                  <span
+                    className={`ocr-status ${
+                      document.ocrStatus
+                    }`}
+                  >
+                    {document.ocrStatus === "pending"
+                      ? "Processing"
+                      : document.ocrStatus === "completed"
+                      ? "Processed"
+                      : document.ocrStatus === "failed"
+                      ? "Failed"
+                      : "Processing"}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </section>
 
         <section className="history-section">
           <div className="history-header">
             <div>
-              <span className="card-label">YOUR RECORD</span>
+              <span className="card-label">
+                YOUR RECORD
+              </span>
+
               <h2>Assessment History</h2>
-              <p>Review your previous health assessments.</p>
+
+              <p>
+                Review your previous health assessments.
+              </p>
             </div>
 
             <div className="history-count">
               {history.length}{" "}
-              {history.length === 1 ? "Assessment" : "Assessments"}
+              {history.length === 1
+                ? "Assessment"
+                : "Assessments"}
             </div>
           </div>
 
           {history.length === 0 ? (
             <div className="history-empty">
-              <div className="history-empty-icon">📋</div>
+              <div className="history-empty-icon">
+                📋
+              </div>
+
               <h3>No assessment history yet</h3>
-              <p>Your completed assessments will appear here.</p>
+
+              <p>
+                Your completed assessments will appear
+                here.
+              </p>
             </div>
           ) : (
             <div className="history-list">
@@ -250,16 +644,21 @@ function PatientDashboard() {
                 <div
                   className="history-card"
                   key={assessment._id}
-                  onClick={() => setSelectedHistory(assessment)}
+                  onClick={() =>
+                    setSelectedHistory(assessment)
+                  }
                 >
                   <div className="history-card-top">
                     <div>
                       <span className="history-date">
-                        {new Date(assessment.createdAt).toLocaleString()}
+                        {new Date(
+                          assessment.createdAt
+                        ).toLocaleString()}
                       </span>
 
                       <h3>
-                        {assessment.summary?.chiefComplaint ||
+                        {assessment.summary
+                          ?.chiefComplaint ||
                           assessment.answers?.[0]?.answer ||
                           "Health Assessment"}
                       </h3>
@@ -278,11 +677,16 @@ function PatientDashboard() {
                     </span>
                   </div>
 
-                  {assessment.summary?.symptoms?.length > 0 && (
+                  {assessment.summary?.symptoms?.length >
+                    0 && (
                     <div className="history-symptoms">
-                      {assessment.summary.symptoms.map((symptom, index) => (
-                        <span key={index}>{symptom}</span>
-                      ))}
+                      {assessment.summary.symptoms.map(
+                        (symptom, index) => (
+                          <span key={index}>
+                            {symptom}
+                          </span>
+                        )
+                      )}
                     </div>
                   )}
 
@@ -295,7 +699,10 @@ function PatientDashboard() {
                   {assessment.doctor && (
                     <div className="history-doctor">
                       <span>Doctor</span>
-                      <strong>Dr. {assessment.doctor.name}</strong>
+
+                      <strong>
+                        Dr. {assessment.doctor.name}
+                      </strong>
                     </div>
                   )}
                 </div>
@@ -305,8 +712,9 @@ function PatientDashboard() {
         </section>
 
         <div className="dashboard-note">
-          <strong>How CarePilot helps:</strong> Complete your assessment
-          before meeting your doctor to reduce repetitive questions and
+          <strong>How CarePilot helps:</strong>{" "}
+          Complete your assessment before meeting your
+          doctor to reduce repetitive questions and
           consultation time.
         </div>
       </main>
@@ -322,10 +730,13 @@ function PatientDashboard() {
           >
             <div className="history-modal-header">
               <div>
-                <span className="card-label">ASSESSMENT RECORD</span>
+                <span className="card-label">
+                  ASSESSMENT RECORD
+                </span>
 
                 <h2>
-                  {selectedHistory.summary?.chiefComplaint ||
+                  {selectedHistory.summary
+                    ?.chiefComplaint ||
                     "Health Assessment"}
                 </h2>
 
@@ -338,7 +749,9 @@ function PatientDashboard() {
 
               <button
                 className="history-close-btn"
-                onClick={() => setSelectedHistory(null)}
+                onClick={() =>
+                  setSelectedHistory(null)
+                }
               >
                 ×
               </button>
@@ -348,14 +761,17 @@ function PatientDashboard() {
               <div className="history-detail-grid">
                 <div className="history-detail">
                   <span>CHIEF COMPLAINT</span>
+
                   <strong>
-                    {selectedHistory.summary?.chiefComplaint ||
+                    {selectedHistory.summary
+                      ?.chiefComplaint ||
                       "Not reported"}
                   </strong>
                 </div>
 
                 <div className="history-detail">
                   <span>DURATION</span>
+
                   <strong>
                     {selectedHistory.summary?.duration ||
                       "Not reported"}
@@ -364,6 +780,7 @@ function PatientDashboard() {
 
                 <div className="history-detail">
                   <span>SEVERITY</span>
+
                   <strong>
                     {selectedHistory.summary?.severity ||
                       "Not reported"}
@@ -372,6 +789,7 @@ function PatientDashboard() {
 
                 <div className="history-detail">
                   <span>URGENCY</span>
+
                   <strong>
                     {selectedHistory.urgency === "urgent"
                       ? "🔴 Urgent"
@@ -382,7 +800,8 @@ function PatientDashboard() {
                 </div>
               </div>
 
-              {selectedHistory.summary?.symptoms?.length > 0 && (
+              {selectedHistory.summary?.symptoms?.length >
+                0 && (
                 <div className="history-modal-section">
                   <span className="history-section-label">
                     REPORTED SYMPTOMS
@@ -391,21 +810,27 @@ function PatientDashboard() {
                   <div className="history-symptoms">
                     {selectedHistory.summary.symptoms.map(
                       (symptom, index) => (
-                        <span key={index}>{symptom}</span>
+                        <span key={index}>
+                          {symptom}
+                        </span>
                       )
                     )}
                   </div>
                 </div>
               )}
 
-              {selectedHistory.summary?.otherInformation && (
+              {selectedHistory.summary
+                ?.otherInformation && (
                 <div className="history-modal-section">
                   <span className="history-section-label">
                     OTHER RELEVANT INFORMATION
                   </span>
 
                   <p className="history-modal-text">
-                    {selectedHistory.summary.otherInformation}
+                    {
+                      selectedHistory.summary
+                        .otherInformation
+                    }
                   </p>
                 </div>
               )}
@@ -424,17 +849,24 @@ function PatientDashboard() {
                     </strong>
 
                     {selectedHistory.flagReason && (
-                      <p>{selectedHistory.flagReason}</p>
+                      <p>
+                        {selectedHistory.flagReason}
+                      </p>
                     )}
 
-                    {selectedHistory.redFlags?.length > 0 && (
+                    {selectedHistory.redFlags?.length >
+                      0 && (
                       <div>
-                        <strong>Reported warning signs:</strong>
+                        <strong>
+                          Reported warning signs:
+                        </strong>
 
                         <ul>
                           {selectedHistory.redFlags.map(
                             (flag, index) => (
-                              <li key={index}>{flag}</li>
+                              <li key={index}>
+                                {flag}
+                              </li>
                             )
                           )}
                         </ul>
@@ -442,6 +874,63 @@ function PatientDashboard() {
                     )}
                   </div>
                 )}
+
+              <div className="history-modal-section">
+                <span className="history-section-label">
+                  ATTACHED DOCUMENTS
+                </span>
+
+                {selectedHistoryDocuments.length === 0 ? (
+                  <p className="history-modal-text">
+                    No documents attached to this assessment.
+                  </p>
+                ) : (
+                  <div className="history-attached-documents">
+                    {selectedHistoryDocuments.map(
+                      (document) => (
+                        <div
+                          className="history-attached-document"
+                          key={document._id}
+                        >
+                          <div className="history-attached-icon">
+                            {document.type === "prescription"
+                              ? "💊"
+                              : document.type ===
+                                "test-report"
+                              ? "🧪"
+                              : "📄"}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {document.fileName}
+                            </strong>
+
+                            <span>
+                              {document.type ===
+                              "prescription"
+                                ? "Prescription"
+                                : document.type ===
+                                  "test-report"
+                                ? "Test Report"
+                                : "Other Document"}
+                            </span>
+                          </div>
+
+                          <button
+                            className="view-document-btn"
+                            onClick={() =>
+                              viewDocument(document)
+                            }
+                          >
+                            View
+                          </button>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="history-doctor-detail">
                 <span>ASSESSMENT SENT TO</span>
@@ -454,15 +943,22 @@ function PatientDashboard() {
               </div>
 
               <div className="history-ai-note">
-                <strong>AI-assisted intake summary</strong>
-                <span>Not a diagnosis</span>
+                <strong>
+                  AI-assisted intake summary
+                </strong>
+
+                <span>
+                  Not a diagnosis
+                </span>
               </div>
             </div>
 
             <div className="history-modal-footer">
               <button
                 className="secondary-btn"
-                onClick={() => setSelectedHistory(null)}
+                onClick={() =>
+                  setSelectedHistory(null)
+                }
               >
                 Close
               </button>

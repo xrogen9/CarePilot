@@ -195,29 +195,6 @@
   color: #176b87;
 }
 
-@media (max-width: 650px) {
-  .patient-header {
-    padding: 0 20px;
-  }
-
-  .patient-content {
-    padding: 35px 15px;
-  }
-
-  .patient-profile > div:last-child {
-    display: none;
-  }
-
-  .assessment-card {
-    padding: 24px;
-    flex-direction: column;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .logout-btn {
   margin-left: 20px;
   padding: 9px 16px;
@@ -299,15 +276,304 @@
   font-weight: 600;
 }
 
-@media (max-width: 600px) {
-  .doctor-code-input {
-    flex-direction: column;
-  }
-
-  .doctor-code-input button {
-    width: 100%;
-  }
+.change-doctor-btn {
+  margin-top: 16px;
+  padding: 9px 15px;
+  border: 1px solid #cfe1e7;
+  border-radius: 8px;
+  background: #f7fafb;
+  color: #176b87;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
 }
+
+.change-doctor-btn:hover {
+  background: #eef7fa;
+  border-color: #b8d5df;
+}
+
+.cancel-change-btn {
+  margin-top: 10px;
+  padding: 8px 13px;
+  border: none;
+  background: transparent;
+  color: #82939a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-change-btn:hover {
+  color: #526970;
+}
+
+/* =========================
+   MEDICAL DOCUMENTS
+========================= */
+
+.documents-card {
+  margin-top: 24px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e3edf1;
+  border-radius: 14px;
+}
+
+.documents-header h2 {
+  margin: 5px 0;
+  color: #173b4a;
+  font-size: 20px;
+}
+
+.documents-header p {
+  margin: 0;
+  color: #71858e;
+  font-size: 13px;
+}
+
+.document-upload {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 14px;
+  background: #f7fafb;
+  border: 1px solid #e4eef1;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+/* =========================
+   CUSTOM DROPDOWN
+========================= */
+
+.custom-dropdown {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-dropdown-button {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 38px 10px 12px;
+  border: 1px solid #d5e3e8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #304b56;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+  box-sizing: border-box;
+}
+
+.custom-dropdown-button:hover {
+  border-color: #b8d5df;
+}
+
+.custom-dropdown.open .custom-dropdown-button {
+  border-color: #4d9bb5;
+  box-shadow: 0 0 0 2px rgba(77, 155, 181, 0.08);
+}
+
+.custom-dropdown-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-55%);
+  color: #5c747e;
+  font-size: 16px;
+  line-height: 1;
+  pointer-events: none;
+  transition: transform 0.2s;
+}
+
+.custom-dropdown.open .custom-dropdown-arrow {
+  transform: translateY(-45%) rotate(180deg);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 5px;
+  background: #ffffff;
+  border: 1px solid #d5e3e8;
+  border-radius: 9px;
+  box-shadow: 0 8px 22px rgba(31, 78, 95, 0.12);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.custom-dropdown-option {
+  width: 100%;
+  padding: 10px 11px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #304b56;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.custom-dropdown-option:hover {
+  background: #eef7fa;
+  color: #176b87;
+}
+
+.custom-dropdown-option.selected {
+  background: #e6f3f6;
+  color: #176b87;
+  font-weight: 600;
+}
+
+/* =========================
+   FILE UPLOAD
+========================= */
+
+.document-upload input[type="file"] {
+  flex: 1;
+  min-width: 0;
+  padding: 8px;
+  box-sizing: border-box;
+  border: 1px solid #d5e3e8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #526970;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.document-upload input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 8px 13px;
+  border: 1px solid #cfe1e7;
+  border-radius: 7px;
+  background: #eef7fa;
+  color: #176b87;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.document-upload input[type="file"]::file-selector-button:hover {
+  background: #e2f1f5;
+  border-color: #b8d5df;
+}
+
+.document-upload > button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #176b87;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.document-upload > button:hover {
+  background: #125a71;
+}
+
+.document-upload > button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-message {
+  margin-top: 10px;
+  color: #176b87;
+  font-size: 12px;
+}
+
+.document-list {
+  margin-top: 18px;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #edf2f4;
+}
+
+.document-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef7fa;
+  border-radius: 10px;
+  font-size: 19px;
+}
+
+.document-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.document-info strong {
+  color: #254450;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.document-info span,
+.document-info small {
+  color: #7a8d95;
+  font-size: 11px;
+}
+
+.ocr-status {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ocr-status.pending,
+.ocr-status.processing {
+  background: #fff6df;
+  color: #a87500;
+}
+
+.ocr-status.completed {
+  background: #e8f7ef;
+  color: #24764b;
+}
+
+.ocr-status.failed {
+  background: #fdecec;
+  color: #b33a3a;
+}
+
+.no-documents {
+  color: #8799a0;
+  font-size: 12px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* =========================
+   ASSESSMENT HISTORY
+========================= */
+
 .history-section {
   margin-top: 30px;
 }
@@ -354,6 +620,13 @@
   border: 1px solid #dce9ee;
   border-radius: 15px;
   box-shadow: 0 6px 20px rgba(31, 78, 95, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.history-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(31, 78, 95, 0.1);
 }
 
 .history-card-top {
@@ -466,30 +739,9 @@
   font-size: 13px;
 }
 
-@media (max-width: 600px) {
-  .history-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .history-card-top {
-    flex-direction: column;
-  }
-
-  .history-urgency {
-    align-self: flex-start;
-  }
-}
-
-.history-card {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.history-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(31, 78, 95, 0.1);
-}
+/* =========================
+   HISTORY MODAL
+========================= */
 
 .history-modal-overlay {
   position: fixed;
@@ -686,7 +938,75 @@
   border-top: 1px solid #e8eff2;
 }
 
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 800px) {
+  .doctor-code-input {
+    flex-direction: column;
+  }
+
+  .doctor-code-input button {
+    width: 100%;
+  }
+
+  .document-upload {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .document-upload .custom-dropdown,
+  .document-upload input[type="file"],
+  .document-upload > button {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .custom-dropdown-menu {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 650px) {
+  .patient-header {
+    padding: 0 20px;
+  }
+
+  .patient-content {
+    padding: 35px 15px;
+  }
+
+  .patient-profile > div:last-child {
+    display: none;
+  }
+
+  .assessment-card {
+    padding: 24px;
+    flex-direction: column;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 600px) {
+  .history-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-card-top {
+    flex-direction: column;
+  }
+
+  .history-urgency {
+    align-self: flex-start;
+  }
+
   .history-modal-overlay {
     align-items: flex-end;
     padding: 0;
@@ -717,36 +1037,100 @@
     padding-left: 20px;
     padding-right: 20px;
   }
+
+  .documents-card {
+    padding: 20px;
+  }
+
+  .document-upload {
+    padding: 12px;
+  }
+
+  .document-item {
+    align-items: flex-start;
+  }
+
+  .ocr-status {
+    margin-left: auto;
+  }
 }
-.change-doctor-btn {
-  margin-top: 16px;
-  padding: 9px 15px;
-  border: 1px solid #cfe1e7;
-  border-radius: 8px;
+.history-attached-documents {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.history-attached-document {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
   background: #f7fafb;
+  border: 1px solid #e1ecef;
+  border-radius: 9px;
+}
+
+.history-attached-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+.history-attached-document div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.history-attached-document strong {
+  color: #304b56;
+  font-size: 13px;
+}
+
+.history-attached-document span {
+  color: #71868e;
+  font-size: 11px;
+}
+.view-document-btn {
+  padding: 8px 13px;
+  border: 1px solid #cfe1e7;
+  border-radius: 7px;
+  background: #eef7fa;
   color: #176b87;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.change-doctor-btn:hover {
-  background: #eef7fa;
+.view-document-btn:hover {
+  background: #e2f1f5;
   border-color: #b8d5df;
 }
 
-.cancel-change-btn {
-  margin-top: 10px;
-  padding: 8px 13px;
-  border: none;
-  background: transparent;
-  color: #82939a;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
+.history-attached-document {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.cancel-change-btn:hover {
-  color: #526970;
+.history-attached-document > div:nth-child(2) {
+  flex: 1;
+}
+.history-attached-document > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.document-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
