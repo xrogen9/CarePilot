@@ -16,7 +16,10 @@ mongoose.connect(process.env.MONGO_URI)
       app.listen(5000, () => console.log("Server running on port 5000"));
     }
   })
-  .catch(err => console.log("MongoDB error:", err));
+  .catch(err => {
+    console.log("MongoDB error:", err.message);
+    console.log("MongoDB reason:", err.reason);
+  });
 
 app.get("/", (req, res) => {
   res.json({ message: "CarePilot API running" });
