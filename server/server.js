@@ -40,4 +40,7 @@ app.use("/api/question", questionRoutes);
 const documentRoutes = require("./routes/document");
 app.use("/api/document", documentRoutes);
 
+const doctorRoutes = require("./routes/doctor");
+app.use("/api/doctor", doctorRoutes);
+
 module.exports = app;

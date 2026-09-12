@@ -1,0 +1,585 @@
+.assessment-history-page {
+  min-height: 100vh;
+  background: #f5f9fa;
+  color: #17343d;
+}
+
+.assessment-history-header {
+  padding: 40px 7%;
+  background: white;
+  border-bottom: 1px solid #e3edef;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 30px;
+}
+
+.history-back-button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin-bottom: 25px;
+  color: #176b87;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.history-page-label {
+  display: block;
+  color: #4c8b9d;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  margin-bottom: 8px;
+}
+
+.assessment-history-header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.assessment-history-header p {
+  margin: 10px 0 0;
+  color: #71868e;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+.new-assessment-button {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: #176b87;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.new-assessment-button:hover {
+  background: #125c75;
+}
+
+.assessment-history-content {
+  width: 86%;
+  max-width: 1100px;
+  margin: 35px auto;
+}
+
+.history-count {
+  color: #71868e;
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+
+.assessment-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assessment-history-card {
+  background: white;
+  border: 1px solid #e3edef;
+  border-radius: 12px;
+  padding: 22px 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.assessment-history-card:hover {
+  border-color: #b8d5df;
+  transform: translateY(-1px);
+}
+
+.assessment-history-date {
+  color: #84979e;
+  font-size: 12px;
+}
+
+.assessment-history-main h2 {
+  margin: 7px 0 12px;
+  font-size: 19px;
+}
+
+.assessment-history-symptoms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.assessment-history-symptoms span {
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #eef7fa;
+  color: #176b87;
+  font-size: 12px;
+}
+
+.assessment-history-doctor {
+  margin: 15px 0 0;
+  color: #71868e;
+  font-size: 13px;
+}
+
+.assessment-history-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 15px;
+  min-width: 110px;
+}
+
+.assessment-history-urgency {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.assessment-history-urgency.normal {
+  color: #39805a;
+}
+
+.assessment-history-urgency.review {
+  color: #a47a19;
+}
+
+.assessment-history-urgency.urgent {
+  color: #b23b3b;
+}
+
+.view-assessment {
+  color: #176b87;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.history-empty-page {
+  background: white;
+  border: 1px solid #e3edef;
+  border-radius: 14px;
+  padding: 70px 30px;
+  text-align: center;
+}
+
+.history-empty-icon {
+  font-size: 42px;
+  margin-bottom: 15px;
+}
+
+.history-empty-page h2 {
+  margin: 0;
+}
+
+.history-empty-page p {
+  color: #71868e;
+  margin-bottom: 25px;
+}
+
+.history-empty-page button {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: #176b87;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.assessment-history-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 38, 45, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px;
+  z-index: 1000;
+}
+
+.assessment-history-modal {
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 15px;
+}
+
+.assessment-history-modal-header {
+  padding: 28px;
+  border-bottom: 1px solid #e5edef;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.assessment-history-modal-header h2 {
+  margin: 5px 0;
+}
+
+.assessment-history-modal-header p {
+  margin: 0;
+  color: #84979e;
+  font-size: 12px;
+}
+
+.history-modal-close {
+  border: none;
+  background: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #71868e;
+}
+
+.assessment-history-modal-content {
+  padding: 28px;
+}
+
+.assessment-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.assessment-detail-box {
+  padding: 16px;
+  background: #f6fafb;
+  border-radius: 9px;
+}
+
+.assessment-detail-box span {
+  display: block;
+  color: #789099;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 7px;
+}
+
+/* =========================
+   MODAL SECTIONS
+========================= */
+
+.history-modal-section {
+  margin-top: 25px;
+}
+
+.history-section-label {
+  display: block;
+  color: #789099;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.history-modal-text {
+  color: #536b73;
+  line-height: 1.6;
+}
+
+.assessment-history-warning {
+  margin-top: 25px;
+  padding: 16px;
+  border-radius: 9px;
+}
+
+.assessment-history-warning.review {
+  background: #fff8e5;
+}
+
+.assessment-history-warning.urgent {
+  background: #fff0f0;
+}
+
+.assessment-history-warning p {
+  margin: 8px 0;
+}
+
+.assessment-history-warning ul {
+  margin-bottom: 0;
+}
+
+/* =========================
+   ATTACHED DOCUMENTS
+========================= */
+
+.history-attached-documents {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.history-attached-document {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e3edef;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.history-attached-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f6fafb;
+  font-size: 18px;
+}
+
+.history-document-details {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  text-align: left;
+}
+
+.history-document-details strong {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #304b56;
+  font-size: 13px;
+  text-align: left;
+}
+
+.history-document-details span {
+  display: block;
+  color: #71868e;
+  font-size: 11px;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* =========================
+   DOCUMENT ACTIONS
+========================= */
+
+.history-document-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  width: auto !important;
+  min-width: max-content !important;
+  max-width: max-content !important;
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+.history-document-actions button {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+.history-view-document {
+  border: 1px solid #cfe1e7;
+  border-radius: 7px;
+  background: #eef7fa;
+  color: #176b87;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.history-view-document:hover {
+  background: #e2f1f5;
+  border-color: #b8d5df;
+}
+
+.history-delete-document {
+  padding: 7px 12px;
+  border: 1px solid #ead0d0;
+  border-radius: 7px;
+  background: #fff7f7;
+  color: #b94a4a;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.history-delete-document:hover {
+  background: #ffeded;
+  border-color: #dfb5b5;
+}
+
+.history-delete-document:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   DOCTOR + AI
+========================= */
+
+.history-doctor-detail {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e5edef;
+}
+
+.history-doctor-detail span {
+  display: block;
+  color: #789099;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 7px;
+}
+
+.history-ai-note {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: #f4f8f9;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  font-size: 12px;
+}
+
+.history-ai-note span {
+  color: #84979e;
+}
+
+.assessment-history-modal-footer {
+  padding: 18px 28px;
+  border-top: 1px solid #e5edef;
+  text-align: right;
+}
+
+.assessment-history-modal-footer button {
+  border: 1px solid #cfe1e7;
+  background: white;
+  border-radius: 7px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+  .assessment-history-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .assessment-history-card {
+    flex-direction: column;
+  }
+
+  .assessment-history-side {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .assessment-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .history-attached-document {
+    gap: 8px;
+  }
+
+  .history-document-details {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .history-document-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: max-content !important;
+  }
+}
+
+@media (max-width: 500px) {
+  .assessment-history-modal-overlay {
+    padding: 12px;
+  }
+
+  .assessment-history-modal-header,
+  .assessment-history-modal-content {
+    padding: 20px;
+  }
+
+  .history-attached-document {
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .history-attached-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 16px;
+  }
+
+  .history-document-details {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .history-document-details strong {
+    font-size: 12px;
+  }
+
+  .history-document-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+  }
+
+  .history-view-document,
+  .history-delete-document {
+    padding: 6px 9px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+}

@@ -1,79 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "./PatientDashboard.css";
-
-function CustomDropdown({
-  value,
-  options,
-  onChange,
-  placeholder
-}) {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const selectedOption = options.find(
-    (option) => option.value === value
-  );
-
-  return (
-    <div
-      className={`custom-dropdown ${open ? "open" : ""}`}
-      ref={dropdownRef}
-    >
-      <button
-        type="button"
-        className="custom-dropdown-button"
-        onClick={() => setOpen(!open)}
-      >
-        <span>
-          {selectedOption?.label || placeholder}
-        </span>
-
-        <span className="custom-dropdown-arrow">
-          ˅
-        </span>
-      </button>
-
-      {open && (
-        <div className="custom-dropdown-menu">
-          {options.map((option) => (
-            <button
-              type="button"
-              key={option.value}
-              className={`custom-dropdown-option ${
-                option.value === value ? "selected" : ""
-              }`}
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function PatientDashboard() {
   const navigate = useNavigate();
@@ -81,69 +9,35 @@ function PatientDashboard() {
 
   const [history, setHistory] = useState([]);
   const [documents, setDocuments] = useState([]);
-  const [doctorCode, setDoctorCode] = useState("");
   const [doctor, setDoctor] = useState(null);
+  const [doctorCode, setDoctorCode] = useState("");
   const [connectMessage, setConnectMessage] = useState("");
-  const [selectedHistory, setSelectedHistory] = useState(null);
   const [changingDoctor, setChangingDoctor] = useState(false);
 
-  const [documentType, setDocumentType] = useState("prescription");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadMessage, setUploadMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
-
-  const [assessments, setAssessments] = useState([]);
-  const [selectedAssessment, setSelectedAssessment] = useState("");
-
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await API.get("/assessment/history");
-        setHistory(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchHistory();
+    fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    const fetchDoctor = async () => {
-      try {
-        const response = await API.get("/auth/me");
-
-        if (response.data.connectedDoctor) {
-          setDoctor(response.data.connectedDoctor);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchDoctor();
-  }, []);
-
-  useEffect(() => {
-    fetchDocuments();
-    fetchAssessments();
-  }, []);
-
-  const fetchDocuments = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await API.get("/document/patient");
-      setDocuments(response.data);
+      const [
+        historyResponse,
+        documentResponse,
+        doctorResponse
+      ] = await Promise.all([
+        API.get("/assessment/history"),
+        API.get("/document/patient"),
+        API.get("/auth/me")
+      ]);
+
+      setHistory(historyResponse.data);
+      setDocuments(documentResponse.data);
+
+      if (doctorResponse.data.connectedDoctor) {
+        setDoctor(doctorResponse.data.connectedDoctor);
+      }
     } catch (error) {
       console.log(error);
-    }
-  };
-
-  const fetchAssessments = async () => {
-    try {
-      const response = await API.get("/assessment/history");
-      setAssessments(response.data);
-    } catch (error) {
-      console.log("Assessment fetch error:", error);
     }
   };
 
@@ -151,9 +45,10 @@ function PatientDashboard() {
     try {
       setConnectMessage("");
 
-      const response = await API.post("/auth/connect-doctor", {
-        doctorCode
-      });
+      const response = await API.post(
+        "/auth/connect-doctor",
+        { doctorCode }
+      );
 
       setDoctor(response.data.doctor);
       setDoctorCode("");
@@ -174,91 +69,8 @@ function PatientDashboard() {
     }
   };
 
-  const uploadDocument = async () => {
-    if (!selectedFile) {
-      setUploadMessage("Please select a document first.");
-      return;
-    }
-
-    try {
-      setUploading(true);
-      setUploadMessage("");
-
-      const formData = new FormData();
-
-      formData.append("document", selectedFile);
-      formData.append("type", documentType);
-
-      if (selectedAssessment) {
-        formData.append("assessment", selectedAssessment);
-      }
-
-      const response = await API.post(
-        "/document/upload",
-        formData
-      );
-
-      setUploadMessage(response.data.message);
-
-      setSelectedFile(null);
-      setSelectedAssessment("");
-
-      const fileInput =
-        document.getElementById("document-file");
-
-      if (fileInput) {
-        fileInput.value = "";
-      }
-
-      fetchDocuments();
-    } catch (error) {
-      setUploadMessage(
-        error.response?.data?.message ||
-          "Could not upload document."
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const viewDocument = async (document) => {
-    try {
-      const response = await API.get(
-        `/document/${document._id}/view`,
-        {
-          responseType: "blob"
-        }
-      );
-
-      const fileBlob = new Blob(
-        [response.data],
-        { type: document.mimeType }
-      );
-
-      const fileUrl =
-        URL.createObjectURL(fileBlob);
-
-      window.open(fileUrl, "_blank");
-
-      setTimeout(() => {
-        URL.revokeObjectURL(fileUrl);
-      }, 60000);
-    } catch (error) {
-      console.log(error);
-
-      alert(
-        error.response?.data?.message ||
-          "Could not open document."
-      );
-    }
-  };
-
-  const selectedHistoryDocuments = selectedHistory
-    ? documents.filter(
-        (document) =>
-          document.assessment?._id === selectedHistory._id
-      )
-    : [];
+  const latestAssessment = history[0];
+  const latestDocument = documents[0];
 
   return (
     <div className="patient-page">
@@ -292,83 +104,86 @@ function PatientDashboard() {
       </header>
 
       <main className="patient-content">
+
+        {/* DOCTOR CONNECTION */}
+
         <section className="doctor-connect-card">
-          <div>
-            <span className="card-label">
-              YOUR DOCTOR
-            </span>
+          <span className="card-label">
+            YOUR DOCTOR
+          </span>
 
-            {doctor && !changingDoctor ? (
-              <>
-                <h2>
-                  Connected to Dr. {doctor.name}
-                </h2>
+          {doctor && !changingDoctor ? (
+            <>
+              <h2>
+                Connected to Dr. {doctor.name}
+              </h2>
 
-                <p>
-                  Your future health assessments will be
-                  sent directly to this doctor.
-                </p>
+              <p>
+                Your future health assessments will be
+                sent directly to this doctor.
+              </p>
 
+              <button
+                className="change-doctor-btn"
+                onClick={() => {
+                  setChangingDoctor(true);
+                  setConnectMessage("");
+                }}
+              >
+                Change Doctor
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>
+                {doctor
+                  ? "Connect to a different doctor"
+                  : "Connect to your doctor"}
+              </h2>
+
+              <p>
+                Enter the CarePilot code provided by
+                your doctor.
+              </p>
+
+              <div className="doctor-code-input">
+                <input
+                  type="text"
+                  placeholder="Enter doctor code"
+                  value={doctorCode}
+                  onChange={(e) =>
+                    setDoctorCode(e.target.value)
+                  }
+                />
+
+                <button onClick={connectDoctor}>
+                  {doctor ? "Change Doctor" : "Connect"}
+                </button>
+              </div>
+
+              {doctor && (
                 <button
-                  className="change-doctor-btn"
+                  className="cancel-change-btn"
                   onClick={() => {
-                    setChangingDoctor(true);
+                    setChangingDoctor(false);
+                    setDoctorCode("");
                     setConnectMessage("");
                   }}
                 >
-                  Change Doctor
+                  Cancel
                 </button>
-              </>
-            ) : (
-              <>
-                <h2>
-                  {doctor
-                    ? "Connect to a different doctor"
-                    : "Connect to your doctor"}
-                </h2>
+              )}
+            </>
+          )}
 
-                <p>
-                  Enter the CarePilot code provided by
-                  your doctor.
-                </p>
-
-                <div className="doctor-code-input">
-                  <input
-                    type="text"
-                    placeholder="Enter doctor code"
-                    value={doctorCode}
-                    onChange={(e) =>
-                      setDoctorCode(e.target.value)
-                    }
-                  />
-
-                  <button onClick={connectDoctor}>
-                    {doctor ? "Change Doctor" : "Connect"}
-                  </button>
-                </div>
-
-                {doctor && (
-                  <button
-                    className="cancel-change-btn"
-                    onClick={() => {
-                      setChangingDoctor(false);
-                      setDoctorCode("");
-                      setConnectMessage("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </>
-            )}
-
-            {connectMessage && (
-              <p className="connect-message">
-                {connectMessage}
-              </p>
-            )}
-          </div>
+          {connectMessage && (
+            <p className="connect-message">
+              {connectMessage}
+            </p>
+          )}
         </section>
+
+        {/* WELCOME */}
 
         <section className="welcome-section">
           <p className="welcome-label">
@@ -384,6 +199,8 @@ function PatientDashboard() {
             for your next consultation.
           </p>
         </section>
+
+        {/* NEW ASSESSMENT */}
 
         <section className="assessment-card">
           <div className="assessment-icon">
@@ -405,11 +222,223 @@ function PatientDashboard() {
 
             <button
               className="assessment-button"
-              onClick={() => navigate("/assessment")}
+              onClick={() =>
+                navigate("/assessment")
+              }
             >
               Start Health Assessment
               <span>→</span>
             </button>
+          </div>
+        </section>
+
+        {/* STATS */}
+
+        <section className="record-stats">
+
+          <div
+            className="record-stat-card"
+            onClick={() =>
+              navigate("/patient/assessments")
+            }
+          >
+            <div className="record-stat-icon">
+              📋
+            </div>
+
+            <div>
+              <span>ASSESSMENTS</span>
+
+              <strong>
+                {history.length}
+              </strong>
+
+              <p>
+                View assessment history →
+              </p>
+            </div>
+          </div>
+
+          <div
+            className="record-stat-card"
+            onClick={() =>
+              navigate("/patient/documents")
+            }
+          >
+            <div className="record-stat-icon">
+              📄
+            </div>
+
+            <div>
+              <span>MEDICAL DOCUMENTS</span>
+
+              <strong>
+                {documents.length}
+              </strong>
+
+              <p>
+                View medical records →
+              </p>
+            </div>
+          </div>
+
+          <div className="record-stat-card">
+            <div className="record-stat-icon">
+              🔒
+            </div>
+
+            <div>
+              <span>RECORD SECURITY</span>
+
+              <strong>Protected</strong>
+
+              <p>
+                Your records are securely handled.
+              </p>
+            </div>
+          </div>
+
+        </section>
+
+        {/* RECENT ACTIVITY */}
+
+        <section className="recent-section">
+          <div className="recent-header">
+            <div>
+              <span className="card-label">
+                RECENT ACTIVITY
+              </span>
+
+              <h2>Your Latest Records</h2>
+            </div>
+          </div>
+
+          <div className="recent-grid">
+
+            {/* LATEST ASSESSMENT */}
+
+            <div className="recent-card">
+              <div className="recent-card-header">
+                <div className="recent-icon">
+                  📋
+                </div>
+
+                <button
+                  onClick={() =>
+                    navigate("/patient/assessments")
+                  }
+                >
+                  View All →
+                </button>
+              </div>
+
+              <span className="recent-label">
+                LATEST ASSESSMENT
+              </span>
+
+              {latestAssessment ? (
+                <>
+                  <h3>
+                    {latestAssessment.summary
+                      ?.chiefComplaint ||
+                      latestAssessment.answers?.[0]
+                        ?.answer ||
+                      "Health Assessment"}
+                  </h3>
+
+                  <p>
+                    {new Date(
+                      latestAssessment.createdAt
+                    ).toLocaleString()}
+                  </p>
+
+                  <span
+                    className={`recent-urgency ${
+                      latestAssessment.urgency ||
+                      "normal"
+                    }`}
+                  >
+                    {latestAssessment.urgency ===
+                    "urgent"
+                      ? "🔴 Urgent"
+                      : latestAssessment.urgency ===
+                        "review"
+                      ? "🟡 Review Recommended"
+                      : "🟢 Normal"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <h3>
+                    No assessments yet
+                  </h3>
+
+                  <p>
+                    Complete your first assessment
+                    to see it here.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* LATEST DOCUMENT */}
+
+            <div className="recent-card">
+              <div className="recent-card-header">
+                <div className="recent-icon">
+                  📄
+                </div>
+
+                <button
+                  onClick={() =>
+                    navigate("/patient/documents")
+                  }
+                >
+                  View All →
+                </button>
+              </div>
+
+              <span className="recent-label">
+                LATEST DOCUMENT
+              </span>
+
+              {latestDocument ? (
+                <>
+                  <h3>
+                    {latestDocument.fileName}
+                  </h3>
+
+                  <p>
+                    {latestDocument.type ===
+                    "prescription"
+                      ? "Prescription"
+                      : latestDocument.type ===
+                        "test-report"
+                      ? "Test Report"
+                      : "Other Document"}
+                  </p>
+
+                  <small>
+                    Uploaded{" "}
+                    {new Date(
+                      latestDocument.createdAt
+                    ).toLocaleString()}
+                  </small>
+                </>
+              ) : (
+                <>
+                  <h3>
+                    No documents yet
+                  </h3>
+
+                  <p>
+                    Upload a medical record to see it
+                    here.
+                  </p>
+                </>
+              )}
+            </div>
+
           </div>
         </section>
 
@@ -445,527 +474,14 @@ function PatientDashboard() {
           </div>
         </section>
 
-        <section className="documents-card">
-          <div className="documents-header">
-            <div>
-              <span className="card-label">
-                MEDICAL DOCUMENTS
-              </span>
-
-              <h2>Your Medical Records</h2>
-
-              <p>
-                Upload prescriptions and medical reports
-                for future reference.
-              </p>
-            </div>
-          </div>
-
-          <div className="document-upload">
-            <CustomDropdown
-              value={selectedAssessment}
-              onChange={setSelectedAssessment}
-              placeholder="General Medical Record"
-              options={[
-                {
-                  value: "",
-                  label: "General Medical Record"
-                },
-                ...assessments.map((assessment) => ({
-                  value: assessment._id,
-                  label: `${
-                    assessment.summary?.chiefComplaint ||
-                    "Medical Assessment"
-                  } - ${new Date(
-                    assessment.createdAt
-                  ).toLocaleDateString()}`
-                }))
-              ]}
-            />
-
-            <CustomDropdown
-              value={documentType}
-              onChange={setDocumentType}
-              options={[
-                {
-                  value: "prescription",
-                  label: "Prescription"
-                },
-                {
-                  value: "test-report",
-                  label: "Test Report"
-                },
-                {
-                  value: "other",
-                  label: "Other"
-                }
-              ]}
-            />
-
-            <input
-              id="document-file"
-              type="file"
-              accept=".jpg,.jpeg,.png,.webp,.pdf"
-              onChange={(e) =>
-                setSelectedFile(e.target.files[0])
-              }
-            />
-
-            <button
-              onClick={uploadDocument}
-              disabled={uploading}
-            >
-              {uploading
-                ? "Uploading..."
-                : "Upload Document"}
-            </button>
-          </div>
-
-          {uploadMessage && (
-            <p className="upload-message">
-              {uploadMessage}
-            </p>
-          )}
-
-          <div className="document-list">
-            {documents.length === 0 ? (
-              <p className="no-documents">
-                No medical documents uploaded yet.
-              </p>
-            ) : (
-              documents.map((document) => (
-                <div
-                  className="document-item"
-                  key={document._id}
-                >
-                  <div className="document-icon">
-                    {document.type === "prescription"
-                      ? "💊"
-                      : document.type === "test-report"
-                      ? "🧪"
-                      : "📄"}
-                  </div>
-
-                  <div className="document-info">
-                    <strong>
-                      {document.fileName}
-                    </strong>
-
-                    <span>
-                      {document.type === "prescription"
-                        ? "Prescription"
-                        : document.type === "test-report"
-                        ? "Test Report"
-                        : "Other Document"}
-                    </span>
-
-                    <small>
-                      {new Date(
-                        document.createdAt
-                      ).toLocaleString()}
-                    </small>
-
-                    {document.assessment && (
-                      <small>
-                        Related to:{" "}
-                        {document.assessment.summary
-                          ?.chiefComplaint ||
-                          "Medical Assessment"}
-                      </small>
-                    )}
-                  </div>
-
-                  <button
-                    className="view-document-btn"
-                    onClick={() =>
-                      viewDocument(document)
-                    }
-                  >
-                    View
-                  </button>
-
-                  <span
-                    className={`ocr-status ${
-                      document.ocrStatus
-                    }`}
-                  >
-                    {document.ocrStatus === "pending"
-                      ? "Processing"
-                      : document.ocrStatus === "completed"
-                      ? "Processed"
-                      : document.ocrStatus === "failed"
-                      ? "Failed"
-                      : "Processing"}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
-        <section className="history-section">
-          <div className="history-header">
-            <div>
-              <span className="card-label">
-                YOUR RECORD
-              </span>
-
-              <h2>Assessment History</h2>
-
-              <p>
-                Review your previous health assessments.
-              </p>
-            </div>
-
-            <div className="history-count">
-              {history.length}{" "}
-              {history.length === 1
-                ? "Assessment"
-                : "Assessments"}
-            </div>
-          </div>
-
-          {history.length === 0 ? (
-            <div className="history-empty">
-              <div className="history-empty-icon">
-                📋
-              </div>
-
-              <h3>No assessment history yet</h3>
-
-              <p>
-                Your completed assessments will appear
-                here.
-              </p>
-            </div>
-          ) : (
-            <div className="history-list">
-              {history.map((assessment) => (
-                <div
-                  className="history-card"
-                  key={assessment._id}
-                  onClick={() =>
-                    setSelectedHistory(assessment)
-                  }
-                >
-                  <div className="history-card-top">
-                    <div>
-                      <span className="history-date">
-                        {new Date(
-                          assessment.createdAt
-                        ).toLocaleString()}
-                      </span>
-
-                      <h3>
-                        {assessment.summary
-                          ?.chiefComplaint ||
-                          assessment.answers?.[0]?.answer ||
-                          "Health Assessment"}
-                      </h3>
-                    </div>
-
-                    <span
-                      className={`history-urgency ${
-                        assessment.urgency || "normal"
-                      }`}
-                    >
-                      {assessment.urgency === "urgent"
-                        ? "🔴 Urgent"
-                        : assessment.urgency === "review"
-                        ? "🟡 Review"
-                        : "🟢 Normal"}
-                    </span>
-                  </div>
-
-                  {assessment.summary?.symptoms?.length >
-                    0 && (
-                    <div className="history-symptoms">
-                      {assessment.summary.symptoms.map(
-                        (symptom, index) => (
-                          <span key={index}>
-                            {symptom}
-                          </span>
-                        )
-                      )}
-                    </div>
-                  )}
-
-                  {assessment.summary?.otherInformation && (
-                    <p className="history-summary">
-                      {assessment.summary.otherInformation}
-                    </p>
-                  )}
-
-                  {assessment.doctor && (
-                    <div className="history-doctor">
-                      <span>Doctor</span>
-
-                      <strong>
-                        Dr. {assessment.doctor.name}
-                      </strong>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
         <div className="dashboard-note">
           <strong>How CarePilot helps:</strong>{" "}
           Complete your assessment before meeting your
           doctor to reduce repetitive questions and
           consultation time.
         </div>
+
       </main>
-
-      {selectedHistory && (
-        <div
-          className="history-modal-overlay"
-          onClick={() => setSelectedHistory(null)}
-        >
-          <div
-            className="history-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="history-modal-header">
-              <div>
-                <span className="card-label">
-                  ASSESSMENT RECORD
-                </span>
-
-                <h2>
-                  {selectedHistory.summary
-                    ?.chiefComplaint ||
-                    "Health Assessment"}
-                </h2>
-
-                <p>
-                  {new Date(
-                    selectedHistory.createdAt
-                  ).toLocaleString()}
-                </p>
-              </div>
-
-              <button
-                className="history-close-btn"
-                onClick={() =>
-                  setSelectedHistory(null)
-                }
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="history-modal-content">
-              <div className="history-detail-grid">
-                <div className="history-detail">
-                  <span>CHIEF COMPLAINT</span>
-
-                  <strong>
-                    {selectedHistory.summary
-                      ?.chiefComplaint ||
-                      "Not reported"}
-                  </strong>
-                </div>
-
-                <div className="history-detail">
-                  <span>DURATION</span>
-
-                  <strong>
-                    {selectedHistory.summary?.duration ||
-                      "Not reported"}
-                  </strong>
-                </div>
-
-                <div className="history-detail">
-                  <span>SEVERITY</span>
-
-                  <strong>
-                    {selectedHistory.summary?.severity ||
-                      "Not reported"}
-                  </strong>
-                </div>
-
-                <div className="history-detail">
-                  <span>URGENCY</span>
-
-                  <strong>
-                    {selectedHistory.urgency === "urgent"
-                      ? "🔴 Urgent"
-                      : selectedHistory.urgency === "review"
-                      ? "🟡 Review Recommended"
-                      : "🟢 No Urgent Indicators"}
-                  </strong>
-                </div>
-              </div>
-
-              {selectedHistory.summary?.symptoms?.length >
-                0 && (
-                <div className="history-modal-section">
-                  <span className="history-section-label">
-                    REPORTED SYMPTOMS
-                  </span>
-
-                  <div className="history-symptoms">
-                    {selectedHistory.summary.symptoms.map(
-                      (symptom, index) => (
-                        <span key={index}>
-                          {symptom}
-                        </span>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedHistory.summary
-                ?.otherInformation && (
-                <div className="history-modal-section">
-                  <span className="history-section-label">
-                    OTHER RELEVANT INFORMATION
-                  </span>
-
-                  <p className="history-modal-text">
-                    {
-                      selectedHistory.summary
-                        .otherInformation
-                    }
-                  </p>
-                </div>
-              )}
-
-              {selectedHistory.urgency &&
-                selectedHistory.urgency !== "normal" && (
-                  <div
-                    className={`history-warning ${
-                      selectedHistory.urgency
-                    }`}
-                  >
-                    <strong>
-                      {selectedHistory.urgency === "urgent"
-                        ? "🔴 Urgent Attention"
-                        : "🟡 Clinical Review Recommended"}
-                    </strong>
-
-                    {selectedHistory.flagReason && (
-                      <p>
-                        {selectedHistory.flagReason}
-                      </p>
-                    )}
-
-                    {selectedHistory.redFlags?.length >
-                      0 && (
-                      <div>
-                        <strong>
-                          Reported warning signs:
-                        </strong>
-
-                        <ul>
-                          {selectedHistory.redFlags.map(
-                            (flag, index) => (
-                              <li key={index}>
-                                {flag}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-              <div className="history-modal-section">
-                <span className="history-section-label">
-                  ATTACHED DOCUMENTS
-                </span>
-
-                {selectedHistoryDocuments.length === 0 ? (
-                  <p className="history-modal-text">
-                    No documents attached to this assessment.
-                  </p>
-                ) : (
-                  <div className="history-attached-documents">
-                    {selectedHistoryDocuments.map(
-                      (document) => (
-                        <div
-                          className="history-attached-document"
-                          key={document._id}
-                        >
-                          <div className="history-attached-icon">
-                            {document.type === "prescription"
-                              ? "💊"
-                              : document.type ===
-                                "test-report"
-                              ? "🧪"
-                              : "📄"}
-                          </div>
-
-                          <div>
-                            <strong>
-                              {document.fileName}
-                            </strong>
-
-                            <span>
-                              {document.type ===
-                              "prescription"
-                                ? "Prescription"
-                                : document.type ===
-                                  "test-report"
-                                ? "Test Report"
-                                : "Other Document"}
-                            </span>
-                          </div>
-
-                          <button
-                            className="view-document-btn"
-                            onClick={() =>
-                              viewDocument(document)
-                            }
-                          >
-                            View
-                          </button>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="history-doctor-detail">
-                <span>ASSESSMENT SENT TO</span>
-
-                <strong>
-                  {selectedHistory.doctor
-                    ? `Dr. ${selectedHistory.doctor.name}`
-                    : "Doctor information unavailable"}
-                </strong>
-              </div>
-
-              <div className="history-ai-note">
-                <strong>
-                  AI-assisted intake summary
-                </strong>
-
-                <span>
-                  Not a diagnosis
-                </span>
-              </div>
-            </div>
-
-            <div className="history-modal-footer">
-              <button
-                className="secondary-btn"
-                onClick={() =>
-                  setSelectedHistory(null)
-                }
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

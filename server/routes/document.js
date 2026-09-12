@@ -2,6 +2,8 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { createClient } = require("@supabase/supabase-js");
+
 const Document = require("../models/Document");
 const Assessment = require("../models/Assessment");
 const User = require("../models/User");
@@ -9,30 +11,15 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-const uploadDir = path.join(__dirname, "../uploads");
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() +
-      "-" +
-      Math.round(Math.random() * 1e9) +
-      path.extname(file.originalname);
-
-    cb(null, uniqueName);
-  }
-});
+const BUCKET_NAME = "medical-documents";
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
 
   limits: {
     fileSize: 10 * 1024 * 1024
@@ -57,6 +44,11 @@ const upload = multer({
     cb(null, true);
   }
 });
+
+
+/* =========================
+   UPLOAD DOCUMENT
+========================= */
 
 router.post(
   "/upload",
@@ -89,8 +81,6 @@ router.post(
       if (
         !["prescription", "test-report", "other"].includes(type)
       ) {
-        fs.unlinkSync(req.file.path);
-
         return res.status(400).json({
           message: "Invalid document type"
         });
@@ -100,14 +90,13 @@ router.post(
       let assessmentDoctor = patient.connectedDoctor || null;
 
       if (assessment) {
-        const selectedAssessment = await Assessment.findOne({
-          _id: assessment,
-          patient: patient._id
-        });
+        const selectedAssessment =
+          await Assessment.findOne({
+            _id: assessment,
+            patient: patient._id
+          });
 
         if (!selectedAssessment) {
-          fs.unlinkSync(req.file.path);
-
           return res.status(400).json({
             message: "Invalid assessment selected"
           });
@@ -117,13 +106,44 @@ router.post(
         assessmentDoctor = selectedAssessment.doctor;
       }
 
+      const fileExtension =
+        path.extname(req.file.originalname);
+
+      const storagePath =
+        `${patient._id}/${Date.now()}-${Math.round(
+          Math.random() * 1e9
+        )}${fileExtension}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(
+            storagePath,
+            req.file.buffer,
+            {
+              contentType: req.file.mimetype,
+              upsert: false
+            }
+          );
+
+      if (uploadError) {
+        console.log(
+          "Supabase upload error:",
+          uploadError
+        );
+
+        return res.status(500).json({
+          message: "Could not upload document"
+        });
+      }
+
       const document = await Document.create({
         patient: patient._id,
         doctor: assessmentDoctor,
         assessment: assessmentId,
         type,
         fileName: req.file.originalname,
-        fileUrl: `/uploads/${req.file.filename}`,
+        fileUrl: storagePath,
         mimeType: req.file.mimetype,
         ocrStatus: "pending"
       });
@@ -132,15 +152,9 @@ router.post(
         message: "Document uploaded successfully",
         document
       });
+
     } catch (error) {
       console.log(error);
-
-      if (
-        req.file?.path &&
-        fs.existsSync(req.file.path)
-      ) {
-        fs.unlinkSync(req.file.path);
-      }
 
       res.status(500).json({
         message: "Server error"
@@ -148,6 +162,11 @@ router.post(
     }
   }
 );
+
+
+/* =========================
+   GET PATIENT DOCUMENTS
+========================= */
 
 router.get("/patient", auth, async (req, res) => {
   try {
@@ -165,6 +184,7 @@ router.get("/patient", auth, async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(documents);
+
   } catch (error) {
     console.log(error);
 
@@ -173,6 +193,11 @@ router.get("/patient", auth, async (req, res) => {
     });
   }
 });
+
+
+/* =========================
+   GET DOCTOR DOCUMENTS
+========================= */
 
 router.get("/doctor", auth, async (req, res) => {
   try {
@@ -190,6 +215,7 @@ router.get("/doctor", auth, async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(documents);
+
   } catch (error) {
     console.log(error);
 
@@ -199,10 +225,15 @@ router.get("/doctor", auth, async (req, res) => {
   }
 });
 
-/* Secure document viewing */
+
+/* =========================
+   VIEW DOCUMENT
+========================= */
+
 router.get("/:id/view", auth, async (req, res) => {
   try {
-    const document = await Document.findById(req.params.id);
+    const document =
+      await Document.findById(req.params.id);
 
     if (!document) {
       return res.status(404).json({
@@ -221,30 +252,34 @@ router.get("/:id/view", auth, async (req, res) => {
 
     if (!isPatient && !isDoctor) {
       return res.status(403).json({
-        message: "You do not have access to this document"
+        message:
+          "You do not have access to this document"
       });
     }
 
-    const fileName = path.basename(document.fileUrl);
-    const filePath = path.join(uploadDir, fileName);
+    const {
+      data: signedUrlData,
+      error: signedUrlError
+    } = await supabase.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(
+        document.fileUrl,
+        60 * 5
+      );
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        message: "Document file not found"
+    if (signedUrlError) {
+      console.log(
+        "Supabase signed URL error:",
+        signedUrlError
+      );
+
+      return res.status(500).json({
+        message: "Could not access document"
       });
     }
 
-    res.setHeader(
-      "Content-Type",
-      document.mimeType
-    );
+    res.redirect(signedUrlData.signedUrl);
 
-    res.setHeader(
-      "Content-Disposition",
-      "inline"
-    );
-
-    res.sendFile(filePath);
   } catch (error) {
     console.log(error);
 
@@ -253,5 +288,66 @@ router.get("/:id/view", auth, async (req, res) => {
     });
   }
 });
+
+
+/* =========================
+   DELETE DOCUMENT
+========================= */
+
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const document =
+      await Document.findById(req.params.id);
+
+    if (!document) {
+      return res.status(404).json({
+        message: "Document not found"
+      });
+    }
+
+    const isPatient =
+      req.user.role === "patient" &&
+      document.patient.toString() === req.user.id;
+
+    if (!isPatient) {
+      return res.status(403).json({
+        message:
+          "You can only delete your own documents"
+      });
+    }
+
+    const { error: deleteError } =
+      await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([document.fileUrl]);
+
+    if (deleteError) {
+      console.log(
+        "Supabase delete error:",
+        deleteError
+      );
+
+      return res.status(500).json({
+        message: "Could not delete document file"
+      });
+    }
+
+    await Document.findByIdAndDelete(
+      document._id
+    );
+
+    res.json({
+      message: "Document deleted successfully"
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
+});
+
 
 module.exports = router;

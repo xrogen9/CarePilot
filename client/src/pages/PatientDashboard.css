@@ -1134,3 +1134,185 @@
   flex-direction: column;
   gap: 4px;
 }
+
+/* =========================
+   DASHBOARD RECORD STATS
+========================= */
+
+.record-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 24px;
+}
+
+.record-stat-card {
+  padding: 20px;
+  background: white;
+  border: 1px solid #dce9ee;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.record-stat-card:hover {
+  border-color: #b8d5df;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(31, 78, 95, 0.08);
+}
+
+.record-stat-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 10px;
+  background: #eef7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+}
+
+.record-stat-card span {
+  display: block;
+  color: #82939a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.record-stat-card strong {
+  display: block;
+  margin-top: 4px;
+  color: #263f49;
+  font-size: 21px;
+}
+
+.record-stat-card p {
+  margin: 3px 0 0;
+  color: #176b87;
+  font-size: 11px;
+}
+
+/* =========================
+   RECENT ACTIVITY
+========================= */
+
+.recent-section {
+  margin-top: 30px;
+}
+
+.recent-header {
+  margin-bottom: 15px;
+}
+
+.recent-header h2 {
+  margin: 5px 0 0;
+  color: #263f49;
+  font-size: 22px;
+}
+
+.recent-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.recent-card {
+  padding: 21px;
+  background: white;
+  border: 1px solid #dce9ee;
+  border-radius: 13px;
+}
+
+.recent-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.recent-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #eef7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recent-card-header button {
+  border: none;
+  background: none;
+  color: #176b87;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recent-label {
+  display: block;
+  color: #82939a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.recent-card h3 {
+  margin: 7px 0 6px;
+  color: #263f49;
+  font-size: 16px;
+  word-break: break-word;
+}
+
+.recent-card p {
+  margin: 0;
+  color: #71808d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.recent-card small {
+  display: block;
+  margin-top: 5px;
+  color: #8799a0;
+  font-size: 10px;
+}
+
+.recent-urgency {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.recent-urgency.normal {
+  background: #edf8f1;
+  color: #287a4a;
+}
+
+.recent-urgency.review {
+  background: #fff7df;
+  color: #9a7011;
+}
+
+.recent-urgency.urgent {
+  background: #fff0f0;
+  color: #c33c3c;
+}
+
+@media (max-width: 800px) {
+  .record-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-grid {
+    grid-template-columns: 1fr;
+  }
+}

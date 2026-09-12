@@ -1,8 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate
+} from "react-router-dom";
+
 import Login from "./pages/Login";
 import PatientDashboard from "./pages/PatientDashboard";
 import Assessment from "./pages/Assessment";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import AssessmentHistory from "./pages/AssessmentHistory";
+import MedicalDocuments from "./pages/MedicalDocuments";
 
 function ProtectedRoute({ role, children }) {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -18,7 +26,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route
+          path="/"
+          element={<Login />}
+        />
 
         <Route
           path="/patient"
@@ -39,6 +50,24 @@ function App() {
         />
 
         <Route
+          path="/patient/assessments"
+          element={
+            <ProtectedRoute role="patient">
+              <AssessmentHistory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/patient/documents"
+          element={
+            <ProtectedRoute role="patient">
+              <MedicalDocuments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/doctor"
           element={
             <ProtectedRoute role="doctor">
@@ -47,7 +76,10 @@ function App() {
           }
         />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
       </Routes>
     </BrowserRouter>
   );
