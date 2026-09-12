@@ -13,9 +13,16 @@ function PatientDashboard() {
   const [doctorCode, setDoctorCode] = useState("");
   const [connectMessage, setConnectMessage] = useState("");
   const [changingDoctor, setChangingDoctor] = useState(false);
+  const [disconnectingDoctor, setDisconnectingDoctor] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
+
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
@@ -35,6 +42,8 @@ function PatientDashboard() {
 
       if (doctorResponse.data.connectedDoctor) {
         setDoctor(doctorResponse.data.connectedDoctor);
+      } else {
+        setDoctor(null);
       }
     } catch (error) {
       console.log(error);
@@ -42,6 +51,11 @@ function PatientDashboard() {
   };
 
   const connectDoctor = async () => {
+    if (!doctorCode.trim()) {
+      setConnectMessage("Please enter your doctor's code.");
+      return;
+    }
+
     try {
       setConnectMessage("");
 
@@ -66,6 +80,40 @@ function PatientDashboard() {
         error.response?.data?.message ||
           "Could not connect to doctor."
       );
+    }
+  };
+
+  const disconnectDoctor = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to disconnect from your doctor? You will need to connect to a doctor again before starting another assessment."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDisconnectingDoctor(true);
+      setConnectMessage("");
+
+      await API.post("/auth/disconnect-doctor");
+
+      setDoctor(null);
+      setDoctorCode("");
+      setChangingDoctor(false);
+
+      setConnectMessage(
+        "Successfully disconnected from your doctor."
+      );
+
+      setTimeout(() => {
+        setConnectMessage("");
+      }, 2500);
+    } catch (error) {
+      setConnectMessage(
+        error.response?.data?.message ||
+          "Could not disconnect from doctor."
+      );
+    } finally {
+      setDisconnectingDoctor(false);
     }
   };
 
@@ -123,15 +171,27 @@ function PatientDashboard() {
                 sent directly to this doctor.
               </p>
 
-              <button
-                className="change-doctor-btn"
-                onClick={() => {
-                  setChangingDoctor(true);
-                  setConnectMessage("");
-                }}
-              >
-                Change Doctor
-              </button>
+              <div className="doctor-actions">
+                <button
+                  className="change-doctor-btn"
+                  onClick={() => {
+                    setChangingDoctor(true);
+                    setConnectMessage("");
+                  }}
+                >
+                  Change Doctor
+                </button>
+
+                <button
+                  className="disconnect-doctor-btn"
+                  onClick={disconnectDoctor}
+                  disabled={disconnectingDoctor}
+                >
+                  {disconnectingDoctor
+                    ? "Disconnecting..."
+                    : "Disconnect Doctor"}
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -154,6 +214,11 @@ function PatientDashboard() {
                   onChange={(e) =>
                     setDoctorCode(e.target.value)
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      connectDoctor();
+                    }
+                  }}
                 />
 
                 <button onClick={connectDoctor}>
@@ -215,19 +280,34 @@ function PatientDashboard() {
             <h2>Health Assessment</h2>
 
             <p>
-              Answer a few simple questions about your
-              symptoms. Your responses will help your
-              doctor prepare before your consultation.
+              {doctor
+                ? "Answer a few simple questions about your symptoms. Your responses will help your doctor prepare before your consultation."
+                : "Connect to a doctor before starting an assessment. Your completed assessment will be sent directly to your connected doctor."}
             </p>
 
             <button
-              className="assessment-button"
-              onClick={() =>
-                navigate("/assessment")
-              }
+              className={`assessment-button ${
+                !doctor ? "disabled" : ""
+              }`}
+              disabled={!doctor}
+              onClick={() => {
+                if (!doctor) {
+                  setConnectMessage(
+                    "Please connect to a doctor before starting an assessment."
+                  );
+                  return;
+                }
+
+                navigate("/assessment");
+              }}
             >
-              Start Health Assessment
-              <span>→</span>
+              {doctor
+                ? "Start Health Assessment"
+                : "Connect Doctor First"}
+
+              <span>
+                {doctor ? "→" : "🔒"}
+              </span>
             </button>
           </div>
         </section>
@@ -352,20 +432,36 @@ function PatientDashboard() {
                     ).toLocaleString()}
                   </p>
 
-                  <span
-                    className={`recent-urgency ${
-                      latestAssessment.urgency ||
-                      "normal"
-                    }`}
-                  >
-                    {latestAssessment.urgency ===
-                    "urgent"
-                      ? "🔴 Urgent"
-                      : latestAssessment.urgency ===
-                        "review"
-                      ? "🟡 Review Recommended"
-                      : "🟢 Normal"}
-                  </span>
+                  <div className="recent-assessment-statuses">
+                    <span
+                      className={`recent-urgency ${
+                        latestAssessment.urgency ||
+                        "normal"
+                      }`}
+                    >
+                      {latestAssessment.urgency ===
+                      "urgent"
+                        ? "🔴 Urgent"
+                        : latestAssessment.urgency ===
+                          "review"
+                        ? "🟡 Review Recommended"
+                        : "🟢 Normal"}
+                    </span>
+
+                    <span
+                      className={`recent-review-status ${
+                        latestAssessment.status ===
+                        "reviewed"
+                          ? "reviewed"
+                          : "waiting"
+                      }`}
+                    >
+                      {latestAssessment.status ===
+                      "reviewed"
+                        ? "✓ Reviewed by Doctor"
+                        : "⏳ Awaiting Doctor Review"}
+                    </span>
+                  </div>
                 </>
               ) : (
                 <>

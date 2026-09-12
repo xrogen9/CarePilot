@@ -302,4 +302,36 @@ router.post("/regenerate-doctor-code", auth, async (req, res) => {
   }
 });
 
+router.post("/disconnect-doctor", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "patient") {
+      return res.status(403).json({
+        message: "Patient access required"
+      });
+    }
+
+    const patient = await User.findById(req.user.id);
+
+    if (!patient) {
+      return res.status(404).json({
+        message: "Patient not found"
+      });
+    }
+
+    patient.connectedDoctor = null;
+
+    await patient.save();
+
+    res.json({
+      message: "Successfully disconnected from doctor"
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Could not disconnect from doctor"
+    });
+  }
+});
+
 module.exports = router;

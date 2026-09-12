@@ -139,6 +139,20 @@
   font-size: 17px;
 }
 
+.assessment-button.disabled,
+.assessment-button:disabled {
+  background: #c7d5da;
+  color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+.assessment-button.disabled:hover,
+.assessment-button:disabled:hover {
+  background: #c7d5da;
+  transform: none;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -292,6 +306,40 @@
 .change-doctor-btn:hover {
   background: #eef7fa;
   border-color: #b8d5df;
+}
+
+.doctor-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.doctor-actions .change-doctor-btn {
+  margin-top: 0;
+}
+
+.disconnect-doctor-btn {
+  padding: 9px 15px;
+  border: 1px solid #ead1d1;
+  border-radius: 8px;
+  background: #fff7f7;
+  color: #a74a4a;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.disconnect-doctor-btn:hover {
+  background: #fff0f0;
+  border-color: #dfb9b9;
+}
+
+.disconnect-doctor-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cancel-change-btn {
@@ -968,19 +1016,84 @@
     max-height: 250px;
     overflow-y: auto;
   }
+
+  .doctor-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .doctor-actions .change-doctor-btn,
+  .doctor-actions .disconnect-doctor-btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 650px) {
   .patient-header {
-    padding: 0 20px;
+    height: 68px;
+    padding: 0 14px;
+    gap: 8px;
+  }
+
+  .patient-header > div:first-child {
+    flex-shrink: 0;
+  }
+
+  .patient-header h1 {
+    font-size: 23px;
+  }
+
+  .patient-header p {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .patient-profile {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+
+  .patient-profile > div:nth-child(2) {
+    display: block;
+    min-width: 0;
+    flex-shrink: 1;
+    text-align: left;
+  }
+
+  .patient-profile strong {
+    display: block;
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .patient-profile span {
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  .patient-profile .profile-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 13px;
+  }
+
+  .patient-profile .logout-btn {
+    margin-left: 4px;
+    padding: 7px 10px;
+    font-size: 10px;
+    white-space: nowrap;
   }
 
   .patient-content {
     padding: 35px 15px;
-  }
-
-  .patient-profile > div:last-child {
-    display: none;
   }
 
   .assessment-card {
@@ -1054,6 +1167,7 @@
     margin-left: auto;
   }
 }
+
 .history-attached-documents {
   display: flex;
   flex-direction: column;
@@ -1097,6 +1211,7 @@
   color: #71868e;
   font-size: 11px;
 }
+
 .view-document-btn {
   padding: 8px 13px;
   border: 1px solid #cfe1e7;
@@ -1123,12 +1238,14 @@
 .history-attached-document > div:nth-child(2) {
   flex: 1;
 }
+
 .history-attached-document > div:nth-child(2) {
   display: flex;
   flex-direction: column;
   gap: 4px;
   flex: 1;
 }
+
 .document-info {
   display: flex;
   flex-direction: column;
@@ -1305,6 +1422,36 @@
 .recent-urgency.urgent {
   background: #fff0f0;
   color: #c33c3c;
+}
+
+.recent-assessment-statuses {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.recent-assessment-statuses .recent-urgency {
+  margin-top: 0;
+}
+
+.recent-review-status {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.recent-review-status.reviewed {
+  background: #e8f7ef;
+  color: #24764b;
+}
+
+.recent-review-status.waiting {
+  background: #fff7df;
+  color: #9a7011;
 }
 
 @media (max-width: 800px) {

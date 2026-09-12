@@ -9,11 +9,41 @@ function AssessmentHistory() {
   const [history, setHistory] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [selectedAssessment, setSelectedAssessment] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  const [doctor, setDoctor] = useState(null);
+  const [connectMessage, setConnectMessage] = useState("");
+
+  const formatComplaint = (value) => {
+    if (!value || typeof value !== "string") return value;
+
+    const text = value.trim();
+
+    if (!text) return text;
+
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
 
   useEffect(() => {
     fetchData();
+    fetchDoctor();
   }, []);
+
+  const fetchDoctor = async () => {
+    try {
+      const response = await API.get("/auth/me");
+      setDoctor(response.data.connectedDoctor || null);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const startAssessment = () => {
+    if (!doctor) {
+      setConnectMessage("Please connect to a doctor before starting an assessment.");
+      return;
+    }
+
+    navigate("/assessment");
+  };
 
   const fetchData = async () => {
     try {
@@ -61,39 +91,6 @@ function AssessmentHistory() {
     }
   };
 
-  const deleteDocument = async (document) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${document.fileName}"?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setDeletingId(document._id);
-
-      await API.delete(
-        `/document/${document._id}`
-      );
-
-      setDocuments((previousDocuments) =>
-        previousDocuments.filter(
-          (item) => item._id !== document._id
-        )
-      );
-    } catch (error) {
-      console.log(error);
-
-      alert(
-        error.response?.data?.message ||
-          "Could not delete document."
-      );
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   const attachedDocuments = selectedAssessment
     ? documents.filter(
         (document) =>
@@ -126,10 +123,11 @@ function AssessmentHistory() {
         </div>
 
         <button
-          className="new-assessment-button"
-          onClick={() => navigate("/assessment")}
+          className={`new-assessment-button ${!doctor ? "disabled" : ""}`}
+          onClick={startAssessment}
+          disabled={!doctor}
         >
-          + New Assessment
+          {doctor ? "+ New Assessment" : "Connect Doctor First"}
         </button>
       </header>
 
@@ -155,10 +153,17 @@ function AssessmentHistory() {
             </p>
 
             <button
-              onClick={() => navigate("/assessment")}
+              onClick={startAssessment}
+              disabled={!doctor}
             >
-              Start Health Assessment
+              {doctor ? "Start Health Assessment" : "Connect Doctor First"}
             </button>
+
+            {!doctor && (
+              <p className="assessment-history-connect-message">
+                Connect to a doctor before starting your assessment.
+              </p>
+            )}
           </div>
         ) : (
           <div className="assessment-history-list">
@@ -178,10 +183,11 @@ function AssessmentHistory() {
                   </span>
 
                   <h2>
-                    {assessment.summary
-                      ?.chiefComplaint ||
-                      assessment.answers?.[0]?.answer ||
-                      "Health Assessment"}
+                    {formatComplaint(
+                      assessment.summary?.chiefComplaint ||
+                        assessment.answers?.[0]?.answer ||
+                        "Health Assessment"
+                    )}
                   </h2>
 
                   {assessment.summary?.symptoms?.length >
@@ -208,6 +214,18 @@ function AssessmentHistory() {
                 </div>
 
                 <div className="assessment-history-side">
+                  <span
+                    className={`assessment-history-status ${
+                      assessment.status || "waiting"
+                    }`}
+                  >
+                    {assessment.status === "reviewed"
+                      ? "✓ Reviewed by Doctor"
+                      : assessment.status === "completed"
+                      ? "✓ Completed"
+                      : "⏳ Awaiting Review"}
+                  </span>
+
                   <span
                     className={`assessment-history-urgency ${
                       assessment.urgency || "normal"
@@ -248,9 +266,10 @@ function AssessmentHistory() {
                 </span>
 
                 <h2>
-                  {selectedAssessment.summary
-                    ?.chiefComplaint ||
-                    "Health Assessment"}
+                  {formatComplaint(
+                    selectedAssessment.summary?.chiefComplaint ||
+                      "Health Assessment"
+                  )}
                 </h2>
 
                 <p>
@@ -271,14 +290,31 @@ function AssessmentHistory() {
             </div>
 
             <div className="assessment-history-modal-content">
+              <div className="assessment-detail-box assessment-status-box">
+                <span>DOCTOR STATUS</span>
+
+                <strong className={
+                  selectedAssessment.status === "reviewed"
+                    ? "reviewed-status-text"
+                    : "pending-status-text"
+                }>
+                  {selectedAssessment.status === "reviewed"
+                    ? "✓ Reviewed by Doctor"
+                    : selectedAssessment.status === "completed"
+                    ? "✓ Completed"
+                    : "⏳ Awaiting Doctor Review"}
+                </strong>
+              </div>
+
               <div className="assessment-detail-grid">
                 <div className="assessment-detail-box">
                   <span>CHIEF COMPLAINT</span>
 
                   <strong>
-                    {selectedAssessment.summary
-                      ?.chiefComplaint ||
-                      "Not reported"}
+                    {formatComplaint(
+                      selectedAssessment.summary?.chiefComplaint ||
+                        "Not reported"
+                    )}
                   </strong>
                 </div>
 
@@ -391,6 +427,13 @@ function AssessmentHistory() {
                   </div>
                 )}
 
+              {selectedAssessment.status === "reviewed" && (
+                <div className="assessment-reviewed-notice">
+                  <strong>✓ Your doctor has reviewed this assessment.</strong>
+                  <span>The assessment is now part of your reviewed medical record.</span>
+                </div>
+              )}
+
               <div className="history-modal-section">
                 <span className="history-section-label">
                   ATTACHED DOCUMENTS
@@ -435,32 +478,14 @@ function AssessmentHistory() {
                             </span>
                           </div>
 
-                          <div className="history-document-actions">
-                            <button
-                              className="history-view-document"
-                              onClick={() =>
-                                viewDocument(document)
-                              }
-                            >
-                              View
-                            </button>
-
-                            <button
-                              className="history-delete-document"
-                              onClick={() =>
-                                deleteDocument(document)
-                              }
-                              disabled={
-                                deletingId ===
-                                document._id
-                              }
-                            >
-                              {deletingId ===
-                              document._id
-                                ? "Deleting..."
-                                : "Delete"}
-                            </button>
-                          </div>
+                          <button
+                            className="history-view-document"
+                            onClick={() =>
+                              viewDocument(document)
+                            }
+                          >
+                            View
+                          </button>
                         </div>
                       )
                     )}

@@ -583,3 +583,52 @@
     white-space: nowrap;
   }
 }
+
+/* Assessment review status */
+.assessment-history-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.assessment-history-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.assessment-history-status.reviewed {
+  background: #e8f7ef;
+  color: #24764b;
+}
+
+.assessment-history-status.waiting {
+  background: #fff7df;
+  color: #9a7011;
+}
+
+.assessment-status-box {
+  margin-bottom: 14px;
+}
+
+.reviewed-status-text {
+  color: #24764b !important;
+}
+
+.pending-status-text {
+  color: #9a7011 !important;
+}
+
+@media (max-width: 600px) {
+  .assessment-history-side {
+    width: 100%;
+    align-items: flex-start;
+  }
+}
